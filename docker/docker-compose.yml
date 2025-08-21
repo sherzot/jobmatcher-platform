@@ -1,0 +1,96 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: jm-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports: ["3306:3306"]
+    command: ["mysqld","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"]
+    volumes:
+      - ../_data/mysql:/var/lib/mysql
+
+  minio:
+    image: minio/minio:latest
+    container_name: jm-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports: ["9000:9000","9001:9001"]
+    volumes:
+      - ../_data/minio:/data
+
+  nats:
+    image: nats:2.10
+    container_name: jm-nats
+    ports: ["4222:4222","8222:8222"]
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: jm-gotenberg
+    ports: ["3000:3000"]
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: jm-mailhog
+    ports: ["8025:8025"]
+
+  # --- Go services ---
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.auth
+    container_name: jm-auth
+    environment:
+      PORT: "8080"
+    depends_on: [ mysql, mailhog ]
+    ports: ["8081:8080"]
+
+  resume-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.resume
+    container_name: jm-resume
+    environment:
+      PORT: "8080"
+      S3_ENDPOINT: "minio:9000"
+      S3_ACCESS_KEY: "minio"
+      S3_SECRET_KEY: "minio123"
+      S3_BUCKET: "resumes"
+      NATS_URL: "nats://nats:4222"
+      GOTENBERG_URL: "http://gotenberg:3000"
+    depends_on: [ mysql, minio, nats, gotenberg ]
+    ports: ["8082:8080"]
+
+  job-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.job
+    container_name: jm-job
+    environment:
+      PORT: "8080"
+    depends_on: [ mysql, nats ]
+    ports: ["8083:8080"]
+
+  pdf-worker:
+    build:
+      context: ..
+    # demo uchun resume Dockerfile’dan foydalanamiz; keyin alohida yozasiz
+      dockerfile: docker/Dockerfile.pdfworker
+    container_name: jm-pdfworker
+    environment:
+      NATS_URL: "nats://nats:4222"
+      S3_ENDPOINT: "minio:9000"
+      S3_ACCESS_KEY: "minio"
+      S3_SECRET_KEY: "minio123"
+      S3_BUCKET: "resumes"
+      GOTENBERG_URL: "http://gotenberg:3000"
+    depends_on: [ nats, minio, gotenberg ]
+
+  parser-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.parser
+    container_name: jm-parser
+    ports: ["8089:8080"]

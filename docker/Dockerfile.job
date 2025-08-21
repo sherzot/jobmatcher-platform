@@ -1,0 +1,10 @@
+FROM golang:1.22 AS build
+WORKDIR /src
+COPY job-service/ ./job-service/
+WORKDIR /src/job-service
+RUN go mod tidy && CGO_ENABLED=0 go build -o /out/job ./cmd/job-service
+
+FROM gcr.io/distroless/base-debian12
+COPY --from=build /out/job /job
+EXPOSE 8080
+ENTRYPOINT ["/job"]

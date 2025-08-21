@@ -1,0 +1,10 @@
+FROM golang:1.22 AS build
+WORKDIR /src
+COPY resume-service/ ./resume-service/
+WORKDIR /src/resume-service
+RUN go mod tidy && CGO_ENABLED=0 go build -o /out/resume ./cmd/resume-service
+
+FROM gcr.io/distroless/base-debian12
+COPY --from=build /out/resume /resume
+EXPOSE 8080
+ENTRYPOINT ["/resume"]
