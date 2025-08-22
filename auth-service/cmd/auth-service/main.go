@@ -1,44 +1,63 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/sherzot/jobmatcher-platform/auth-service/internal/config"
+	"github.com/sherzot/jobmatcher-platform/auth-service/internal/db"
+	"github.com/sherzot/jobmatcher-platform/auth-service/internal/handlers"
+	"github.com/sherzot/jobmatcher-platform/auth-service/internal/middleware"
+	"github.com/sherzot/jobmatcher-platform/auth-service/internal/models"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	cfg := config.Load()
+	d := db.Connect(cfg.MysqlDSN)
+
+	// Auto-migrate
+	if err := d.AutoMigrate(&models.User{}); err != nil {
+		log.Fatalf("migrate error: %v", err)
 	}
 
+	h := &handlers.AuthHandler{DB: d, JWTSecret: cfg.JWTSecret}
 	r := chi.NewRouter()
 
-	// CORS: Vite dev server (5173)
+	// CORS (frontend: 5173)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
-	// Health + Ping
-	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/healthz", h.Healthz)
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Write([]byte("ok"))
-	})
-	r.Get("/api/v1/auth/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Write([]byte("auth pong " + time.Now().Format(time.RFC3339)))
+		w.Write([]byte("pong"))
 	})
 
-	addr := fmt.Sprintf(":%s", port)
-	log.Println("auth-service listening on", addr)
-	http.ListenAndServe(addr, r)
+	// API v1
+	r.Route("/api/v1/auth", func(r chi.Router) {
+		r.Post("/register", h.Register)
+		r.Post("/login", h.Login)
+		// protected:
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(cfg.JWTSecret))
+			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
+				if uid, ok := middleware.UserID(r); ok {
+					h.Me(w, r, uid)
+					return
+				}
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+			})
+		})
+	})
+
+	log.Printf("auth-service listening on :%s", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }

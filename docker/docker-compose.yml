@@ -6,9 +6,26 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
     ports: ["3306:3306"]
-    command: ["mysqld","--character-set-server=utf8mb4","--collation-server=utf8mb4_0900_ai_ci"]
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_0900_ai_ci",
+      ]
     volumes:
       - ../_data/mysql:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: jm-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports: ["8080:80"]
+    depends_on:
+      - mysql
 
   minio:
     image: minio/minio:latest
@@ -17,14 +34,14 @@ services:
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
-    ports: ["9000:9000","9001:9001"]
+    ports: ["9000:9000", "9001:9001"]
     volumes:
       - ../_data/minio:/data
 
   nats:
     image: nats:2.10
     container_name: jm-nats
-    ports: ["4222:4222","8222:8222"]
+    ports: ["4222:4222", "8222:8222"]
 
   gotenberg:
     image: gotenberg/gotenberg:8
@@ -38,14 +55,18 @@ services:
 
   # --- Go services ---
   auth-service:
+    image: docker-auth-service
     build:
       context: ..
       dockerfile: docker/Dockerfile.auth
-    container_name: jm-auth
     environment:
-      PORT: "8080"
-    depends_on: [ mysql, mailhog ]
-    ports: ["8081:8080"]
+      - PORT=8080
+      - MYSQL_DSN=jm:jm_password@tcp(mysql:3306)/jobmatcher?parseTime=true&charset=utf8mb4&loc=Local
+      - JWT_SECRET=local-super-secret
+    ports:
+      - "8081:8080"
+    depends_on:
+      - mysql
 
   resume-service:
     build:
@@ -60,7 +81,7 @@ services:
       S3_BUCKET: "resumes"
       NATS_URL: "nats://nats:4222"
       GOTENBERG_URL: "http://gotenberg:3000"
-    depends_on: [ mysql, minio, nats, gotenberg ]
+    depends_on: [mysql, minio, nats, gotenberg]
     ports: ["8082:8080"]
 
   job-service:
@@ -70,13 +91,13 @@ services:
     container_name: jm-job
     environment:
       PORT: "8080"
-    depends_on: [ mysql, nats ]
+    depends_on: [mysql, nats]
     ports: ["8083:8080"]
 
   pdf-worker:
     build:
       context: ..
-    # demo uchun resume Dockerfile’dan foydalanamiz; keyin alohida yozasiz
+      # demo uchun resume Dockerfile’dan foydalanamiz; keyin alohida yozasiz
       dockerfile: docker/Dockerfile.pdfworker
     container_name: jm-pdfworker
     environment:
@@ -86,7 +107,7 @@ services:
       S3_SECRET_KEY: "minio123"
       S3_BUCKET: "resumes"
       GOTENBERG_URL: "http://gotenberg:3000"
-    depends_on: [ nats, minio, gotenberg ]
+    depends_on: [nats, minio, gotenberg]
 
   parser-service:
     build:

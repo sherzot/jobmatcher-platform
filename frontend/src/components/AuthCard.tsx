@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import FormInput from "./FormInput";
 import { Button, Card } from "../app/ui";
 import { useState } from "react";
+import Divider from "../components/Divider";
+import OAuthButtons from "../components/OAuthButtons";
 const loginSchema = z.object({
   email: z.string().email("無効なメールアドレス"),
   password: z.string().min(6, "少なくとも6文字"),
@@ -23,11 +25,11 @@ export function LoginCard() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     setLoading(true);
     try {
       // TODO: backend ulanishi (keyingi bosqich)
@@ -46,7 +48,7 @@ export function LoginCard() {
           name="email"
           type="email"
           register={register}
-          error={errors.email as any}
+          error={errors.email}
           autoComplete="email"
         />
         <FormInput
@@ -60,6 +62,8 @@ export function LoginCard() {
         <Button className="w-full" loading={loading} type="submit">
           ログイン
         </Button>
+        <Divider text="または" />
+        <OAuthButtons />
       </form>
     </Card>
   );
@@ -71,11 +75,11 @@ export function RegisterCard() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
     setLoading(true);
     try {
       // TODO: backend ulanishi (keyingi bosqich)
@@ -116,6 +120,8 @@ export function RegisterCard() {
         <Button className="w-full" loading={loading} type="submit">
           登録する
         </Button>
+        <Divider text="または" />
+        <OAuthButtons />
       </form>
     </Card>
   );
@@ -127,11 +133,11 @@ export function AgentLoginCard() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<z.infer<typeof agentloginSchema>>({
     resolver: zodResolver(agentloginSchema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof agentloginSchema>) => {
     setLoading(true);
     try {
       // TODO: backend ulanishi (keyingi bosqich)
@@ -161,12 +167,18 @@ export function AgentLoginCard() {
           name="password"
           type="password"
           register={register}
-          error={errors.password && 'type' in errors.password ? errors.password : undefined}
+          error={
+            errors.password && "type" in errors.password
+              ? errors.password
+              : undefined
+          }
           autoComplete="current-password"
         />
         <Button className="w-full" loading={loading} type="submit">
           ログイン
         </Button>
+        <Divider text="または" />
+        <OAuthButtons />
       </form>
     </Card>
   );

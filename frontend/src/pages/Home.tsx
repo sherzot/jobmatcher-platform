@@ -13,7 +13,7 @@ export default function Home() {
 
       <section className="border-b border-slate-200 bg-white/60 backdrop-blur">
         <Container className="py-12 md:py-16">
-          <div className="grid md:grid-cols-1 gap-8 items-center">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <img src={topPc} alt="top-pc" className="w-50"/>
               {/* <h1 className="text-3xl md:text-4xl font-bold leading-tight">
@@ -32,7 +32,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            {/* <div>
+            <div>
               <Card className="p-0">
                 <div className="grid md:grid-cols-1 gap-0">
                   <div className="p-4">
@@ -40,7 +40,7 @@ export default function Home() {
                   </div>
                 </div>
               </Card>
-            </div> */}
+            </div>
           </div>
         </Container>
       </section>

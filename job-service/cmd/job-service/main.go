@@ -37,5 +37,7 @@ func main() {
 
 	addr := fmt.Sprintf(":%s", port)
 	log.Println("job-service listening on", addr)
-	http.ListenAndServe(addr, r)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }

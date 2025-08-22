@@ -11,18 +11,26 @@ import Admin from "../pages/Admin";
 import AgentLogin from "../pages/AgentLogin";
 import AdminLogin from "../pages/AdminLogin";
 import MyPage from "../pages/MyPage";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
-  { path: "/jobs", element: <Jobs /> },
-  { path: "/resume", element: <Resume /> },
-  { path: "/offers", element: <Offers /> },
-  { path: "/companies", element: <Companies /> },
-  { path: "/agents", element: <Agents /> },
-  { path: "/admin", element: <Admin /> },
   { path: "/agent/login", element: <AgentLogin /> },
   { path: "/admin/login", element: <AdminLogin /> },
-  { path: "/mypage", element: <MyPage /> },
+  // public
+  { path: "/jobs", element: <Jobs /> },
+  // protected:
+  {
+    element: <ProtectedRoute />,
+    children: [
+      { path: "/mypage", element: <MyPage /> },
+      { path: "/resume", element: <Resume /> },
+      { path: "/offers", element: <Offers /> },
+      { path: "/companies", element: <Companies /> },
+      { path: "/agents", element: <Agents /> },
+      { path: "/admin", element: <Admin /> }, // agar admin/agent uchun alohida layout bo'lsa keyin ajratamiz
+    ],
+  },
 ]);
