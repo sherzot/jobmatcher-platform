@@ -1,4 +1,4 @@
-module github.com/yourorg/jobmatcher-platform/job-service
+module jobmatcher-platform/job-service
 
 go 1.22
 

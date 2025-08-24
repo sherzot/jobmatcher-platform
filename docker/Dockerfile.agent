@@ -1,0 +1,10 @@
+FROM golang:1.23 AS build
+WORKDIR /src
+COPY backend/agent-service/ ./agent-service/
+WORKDIR /src/agent-service
+RUN go mod tidy && CGO_ENABLED=0 go build -o /out/agent ./cmd/agent-service
+
+FROM gcr.io/distroless/base-debian12
+COPY --from=build /out/agent /agent
+EXPOSE 8080
+ENTRYPOINT ["/agent"]

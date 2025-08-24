@@ -1,6 +1,6 @@
 FROM golang:1.23 AS build
 WORKDIR /src
-COPY auth-service/ ./auth-service/
+COPY backend/auth-service/ ./auth-service/
 WORKDIR /src/auth-service
 RUN go mod tidy && CGO_ENABLED=0 go build -o /out/auth ./cmd/auth-service
 

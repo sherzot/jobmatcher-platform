@@ -13,10 +13,11 @@ export default function AgentLogin() {
         <Card title="エージェントログイン" subtitle="(デモ: ロール切替)">
           <Button
             onClick={() =>
-              login(
-                { id: 100, name: "Agent A", role: "agent" },
-                "demo-token"
-              )
+              login("demo-token", {
+                id: 100,
+                name: "Agent A",
+                email: "agent@example.com",
+              })
             }
           >
             エージェントとしてログイン

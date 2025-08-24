@@ -1,6 +1,6 @@
-FROM golang:1.22 AS build
+FROM golang:1.23 AS build
 WORKDIR /src
-COPY job-service/ ./job-service/
+COPY backend/job-service/ ./job-service/
 WORKDIR /src/job-service
 RUN go mod tidy && CGO_ENABLED=0 go build -o /out/job ./cmd/job-service
 
