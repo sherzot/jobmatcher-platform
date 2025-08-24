@@ -5,8 +5,12 @@ import { RegisterCard } from "../components/AuthCard";
 import { Link } from "react-router-dom";
 import topPc from "../assets/top-pc.png";
 import topZPc from "../assets/top-z-pc.png";
+import { useAuth } from "../app/auth/AuthProvider.tsx";
 
 export default function Home() {
+	const { state } = useAuth();
+  const role = state.role; // "guest" | "user" | "agent" | "admin"
+  const isAuthed = role !== "guest";
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <Navbar />
@@ -15,7 +19,7 @@ export default function Home() {
         <Container className="py-12 md:py-16">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
-              <img src={topPc} alt="top-pc" className="w-50"/>
+              <img src={topPc} alt="top-pc" className="w-50" />
               {/* <h1 className="text-3xl md:text-4xl font-bold leading-tight">
                 AIアシスタントで高速化{" "}
                 <span className="text-red-600">求人マッチング</span>
@@ -33,13 +37,17 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <Card className="p-0">
-                <div className="grid md:grid-cols-1 gap-0">
-                  <div className="p-4">
-                    <RegisterCard />
-                  </div>
-                </div>
-              </Card>
+              {!isAuthed && (
+                <>
+                  <Card className="p-0">
+                    <div className="grid md:grid-cols-1 gap-0">
+                      <div className="p-4">
+                        <RegisterCard />
+                      </div>
+                    </div>
+                  </Card>
+                </>
+              )}
             </div>
           </div>
         </Container>
