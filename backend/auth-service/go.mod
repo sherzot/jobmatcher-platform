@@ -1,4 +1,4 @@
-module github.com/sherzot/jobmatcher-platform/auth-service
+module github.com/sherzot/jobmatcher-platform/backend/auth-service
 
 go 1.23.0
 

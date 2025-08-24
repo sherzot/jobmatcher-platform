@@ -6,11 +6,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/config"
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/db"
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/handlers"
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/middleware"
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/models"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/config"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/db"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/handlers"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/middleware"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/models"
 )
 
 func main() {

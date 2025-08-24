@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/sherzot/jobmatcher-platform/auth-service/internal/jwtutil"
+	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/jwtutil"
 )
 
 type ctxKey string
