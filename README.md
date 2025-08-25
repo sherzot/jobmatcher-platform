@@ -15,19 +15,6 @@
 - **オファーサービス** - 求人管理
 - **パーサーサービス** - PDFおよびその他の形式の解析
 - **PDFワーカー** - PDFファイルの処理
-  (
-The platform is built on a microservices architecture:
-
-- **Auth Service** - User authentication and authorization
-- **Job Service** - Job management
-- **Resume Service** - Resume management and PDF conversion
-- **Company Service** - Company management
-- **Agent Service** - Job agent management
-- **Admin Service** - For platform administrators
-- **Offer Service** - Job offer management
-- **Parser Service** - Parsing PDF and other formats
-- **PDF Worker** - PDF file processing
-  )
 
 ## 🚀 Quick Start
 
