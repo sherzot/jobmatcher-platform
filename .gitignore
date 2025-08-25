@@ -11,6 +11,15 @@ pnpm-lock.yaml
 **/out/
 *.exe
 *.test
+# Go binaries
+**/auth-service
+**/job-service
+**/resume-service
+**/pdf-worker
+**/admin-service
+**/agent-service
+**/company-service
+**/offer-service
 parser-service/.venv/
 parser-service/venv/
 parser-service/__pycache__/
