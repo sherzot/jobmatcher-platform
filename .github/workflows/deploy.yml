@@ -62,7 +62,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.auth
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/auth-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:auth-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -72,7 +72,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.job
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/job-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:job-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -82,7 +82,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.resume
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/resume-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:resume-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -92,7 +92,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.pdfworker
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/pdf-worker:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pdf-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -102,7 +102,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.parser
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/parser-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:parser-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -112,7 +112,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.admin
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/admin-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -122,7 +122,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.agent
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/agent-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -132,7 +132,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.company
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/company-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:company-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
@@ -142,7 +142,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.offer
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/offer-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:offer-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
