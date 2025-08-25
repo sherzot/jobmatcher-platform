@@ -23,48 +23,48 @@ echo "🏗️  Barcha xizmatlar build qilinmoqda..."
 
 # Auth Service
 echo "🔐 Auth Service build qilinmoqda..."
-docker build -f docker/Dockerfile.auth -t ${DOCKER_REGISTRY}/jobmatcher-app/auth-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/auth-service:latest
+docker build -f docker/Dockerfile.auth -t ${DOCKER_REGISTRY}/jobmatcher/auth-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/auth-service:latest
 
 # Resume Service
 echo "📄 Resume Service build qilinmoqda..."
-docker build -f docker/Dockerfile.resume -t ${DOCKER_REGISTRY}/jobmatcher-app/resume-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/resume-service:latest
+docker build -f docker/Dockerfile.resume -t ${DOCKER_REGISTRY}/jobmatcher/resume-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/resume-service:latest
 
 # Job Service
 echo "💼 Job Service build qilinmoqda..."
-docker build -f docker/Dockerfile.job -t ${DOCKER_REGISTRY}/jobmatcher-app/job-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/job-service:latest
+docker build -f docker/Dockerfile.job -t ${DOCKER_REGISTRY}/jobmatcher/job-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/job-service:latest
 
 # PDF Worker
 echo "📊 PDF Worker build qilinmoqda..."
-docker build -f docker/Dockerfile.pdfworker -t ${DOCKER_REGISTRY}/jobmatcher-app/pdf-worker:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/pdf-worker:latest
+docker build -f docker/Dockerfile.pdfworker -t ${DOCKER_REGISTRY}/jobmatcher/pdf-worker:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/pdf-worker:latest
 
 # Parser Service
 echo "🔍 Parser Service build qilinmoqda..."
-docker build -f docker/Dockerfile.parser -t ${DOCKER_REGISTRY}/jobmatcher-app/parser-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/parser-service:latest
+docker build -f docker/Dockerfile.parser -t ${DOCKER_REGISTRY}/jobmatcher/parser-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/parser-service:latest
 
 # Admin Service
 echo "👨‍💼 Admin Service build qilinmoqda..."
-docker build -f docker/Dockerfile.admin -t ${DOCKER_REGISTRY}/jobmatcher-app/admin-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/admin-service:latest
+docker build -f docker/Dockerfile.admin -t ${DOCKER_REGISTRY}/jobmatcher/admin-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/admin-service:latest
 
 # Agent Service
 echo "🤖 Agent Service build qilinmoqda..."
-docker build -f docker/Dockerfile.agent -t ${DOCKER_REGISTRY}/jobmatcher-app/agent-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/agent-service:latest
+docker build -f docker/Dockerfile.agent -t ${DOCKER_REGISTRY}/jobmatcher/agent-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/agent-service:latest
 
 # Company Service
 echo "🏢 Company Service build qilinmoqda..."
-docker build -f docker/Dockerfile.company -t ${DOCKER_REGISTRY}/jobmatcher-app/company-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/company-service:latest
+docker build -f docker/Dockerfile.company -t ${DOCKER_REGISTRY}/jobmatcher/company-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/company-service:latest
 
 # Offer Service
 echo "💝 Offer Service build qilinmoqda..."
-docker build -f docker/Dockerfile.offer -t ${DOCKER_REGISTRY}/jobmatcher-app/offer-service:latest .
-docker push ${DOCKER_REGISTRY}/jobmatcher-app/offer-service:latest
+docker build -f docker/Dockerfile.offer -t ${DOCKER_REGISTRY}/jobmatcher/offer-service:latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher/offer-service:latest
 
 echo "✅ Barcha xizmatlar muvaffaqiyatli build va push qilindi!"
 
