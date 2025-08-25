@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  # Web Frontend (Users)
+  web-frontend:
+    image: sherdev/jobmatcher:web-frontend-latest
+    container_name: jm-web-frontend
+    ports:
+      - "4001:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - jobmatcher-network
+    restart: unless-stopped
+
+  # Agent Frontend
+  agent-frontend:
+    image: sherdev/jobmatcher:agent-frontend-latest
+    container_name: jm-agent-frontend
+    ports:
+      - "4002:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - jobmatcher-network
+    restart: unless-stopped
+
+  # Admin Frontend
+  admin-frontend:
+    image: sherdev/jobmatcher:admin-frontend-latest
+    container_name: jm-admin-frontend
+    ports:
+      - "4003:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - jobmatcher-network
+    restart: unless-stopped
+
+networks:
+  jobmatcher-network:
+    external: true

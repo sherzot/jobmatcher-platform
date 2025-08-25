@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,19 +46,36 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "email already registered", http.StatusConflict)
 		return
 	}
+
+	// Generate StaffCode automatically
+	var lastUser models.User
+	var staffCode string
+	if err := h.DB.Order("StaffCode DESC").First(&lastUser).Error; err != nil {
+		// First user
+		staffCode = "S0000001"
+	} else {
+		// Extract number from last StaffCode and increment
+		lastNum := lastUser.StaffCode[1:] // Remove 'S' prefix
+		if num, err := strconv.Atoi(lastNum); err == nil {
+			staffCode = fmt.Sprintf("S%07d", num+1)
+		} else {
+			staffCode = "S0000001" // Fallback
+		}
+	}
+
 	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
-	u := models.User{Name: in.Name, Email: in.Email, PasswordHash: string(hash)}
+	u := models.User{StaffCode: staffCode, Name: in.Name, Email: in.Email, PasswordHash: string(hash)}
 	if err := h.DB.Create(&u).Error; err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return
 	}
 	// auto login response (optional)
-	token, exp, _ := jwtutil.Sign(u.ID, u.Email, h.JWTSecret, 24*time.Hour)
+	token, exp, _ := jwtutil.Sign(u.StaffCode, u.Email, h.JWTSecret, 24*time.Hour)
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"access_token": token,
 		"token_type":   "Bearer",
 		"expires_at":   exp.UTC(),
-		"user":         map[string]any{"id": u.ID, "name": u.Name, "email": u.Email},
+		"user":         map[string]any{"staff_code": u.StaffCode, "name": u.Name, "email": u.Email},
 	})
 }
 
@@ -81,22 +100,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
-	token, exp, _ := jwtutil.Sign(u.ID, u.Email, h.JWTSecret, 24*time.Hour)
+	token, exp, _ := jwtutil.Sign(u.StaffCode, u.Email, h.JWTSecret, 24*time.Hour)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"access_token": token,
 		"token_type":   "Bearer",
 		"expires_at":   exp.UTC(),
-		"user":         map[string]any{"id": u.ID, "name": u.Name, "email": u.Email},
+		"user":         map[string]any{"staff_code": u.StaffCode, "name": u.Name, "email": u.Email},
 	})
 }
 
-func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request, userID uint) {
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request, userStaffCode string) {
 	var u models.User
-	if err := h.DB.First(&u, userID).Error; err != nil {
+	if err := h.DB.First(&u, "staff_code = ?", userStaffCode).Error; err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": u.ID, "name": u.Name, "email": u.Email})
+	writeJSON(w, http.StatusOK, map[string]any{"staff_code": u.StaffCode, "name": u.Name, "email": u.Email})
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {

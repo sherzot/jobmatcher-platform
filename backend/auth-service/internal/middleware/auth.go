@@ -10,7 +10,7 @@ import (
 
 type ctxKey string
 
-const CtxUserID ctxKey = "uid"
+const CtxUserStaffCode ctxKey = "staff_code"
 
 func Auth(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -26,17 +26,17 @@ func Auth(secret string) func(http.Handler) http.Handler {
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
-			ctx := context.WithValue(r.Context(), CtxUserID, claims.UserID)
+			ctx := context.WithValue(r.Context(), CtxUserStaffCode, claims.UserStaffCode)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func UserID(r *http.Request) (uint, bool) {
-	v := r.Context().Value(CtxUserID)
+func UserStaffCode(r *http.Request) (string, bool) {
+	v := r.Context().Value(CtxUserStaffCode)
 	if v == nil {
-		return 0, false
+		return "", false
 	}
-	id, _ := v.(uint)
-	return id, true
+	staffCode, _ := v.(string)
+	return staffCode, true
 }

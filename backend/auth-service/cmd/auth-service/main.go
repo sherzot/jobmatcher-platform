@@ -49,8 +49,8 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(cfg.JWTSecret))
 			r.Get("/me", func(w http.ResponseWriter, r *http.Request) {
-				if uid, ok := middleware.UserID(r); ok {
-					h.Me(w, r, uid)
+				if staffCode, ok := middleware.UserStaffCode(r); ok {
+					h.Me(w, r, staffCode)
 					return
 				}
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
