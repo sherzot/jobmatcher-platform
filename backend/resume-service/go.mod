@@ -1,6 +1,6 @@
-module github.com/yourorg/jobmatcher-platform/resume-service
+module github.com/sherzot/jobmatcher-platform/backend/resume-service
 
-go 1.22
+go 1.23
 
 require github.com/go-chi/chi/v5 v5.2.2
 
