@@ -155,7 +155,7 @@ services:
     image: ${DOCKER_REGISTRY}/jobmatcher:frontend-latest
     container_name: jm-frontend-prod
     ports:
-      - "3000:80"
+      - "4000:80"
     depends_on:
       - nginx
     restart: unless-stopped
