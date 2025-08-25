@@ -1,20 +1,33 @@
 # JobMatcher Platform
 
-Ish beruvchilar va ish qidirayotganlar o'rtasida bog'lanish platformasi.
+雇用主と求職者をつなぐプラットフォーム。(A platform for connecting employers and job seekers.)
 
 ## 🏗️ Architecture
 
-Platforma microservices architecture asosida qurilgan:
+このプラットフォームは、マイクロサービスアーキテクチャに基づいて構築されています。
 
-- **Auth Service** - Foydalanuvchilar autentifikatsiyasi va avtorizatsiyasi
-- **Job Service** - Ish o'rinlari boshqaruvi
-- **Resume Service** - Rezyume boshqaruvi va PDF konvertatsiyasi
-- **Company Service** - Kompaniyalar boshqaruvi
-- **Agent Service** - Ish agentlari boshqaruvi
-- **Admin Service** - Platforma administratorlari uchun
-- **Offer Service** - Ish takliflari boshqaruvi
-- **Parser Service** - PDF va boshqa formatlarni parse qilish
-- **PDF Worker** - PDF fayllarni qayta ishlash
+- **認証サービス** - ユーザー認証と認可
+- **求人サービス** - 求人管理
+- **履歴書サービス** - 履歴書管理とPDF変換
+- **企業サービス** - 企業管理
+- **エージェントサービス** - 求人エージェント管理
+- **管理者サービス** - プラットフォーム管理者向け
+- **オファーサービス** - 求人管理
+- **パーサーサービス** - PDFおよびその他の形式の解析
+- **PDFワーカー** - PDFファイルの処理
+  (
+The platform is built on a microservices architecture:
+
+- **Auth Service** - User authentication and authorization
+- **Job Service** - Job management
+- **Resume Service** - Resume management and PDF conversion
+- **Company Service** - Company management
+- **Agent Service** - Job agent management
+- **Admin Service** - For platform administrators
+- **Offer Service** - Job offer management
+- **Parser Service** - Parsing PDF and other formats
+- **PDF Worker** - PDF file processing
+  )
 
 ## 🚀 Quick Start
 
@@ -36,14 +49,14 @@ docker-compose ps
 ### Production Deployment
 
 ```bash
-# 1. Environment sozlash
+# 1. 環境設定
 cp docker/env.prod.example docker/.env.prod
-# .env.prod faylini o'zgartiring
+# .env.prod ファイルを変更する
 
-# 2. Docker Hub-ga kirish
+# 2. Docker Hub にアクセスする
 docker login
 
-# 3. Deploy qilish
+# 3. 展開する
 ./scripts/deploy.sh
 ```
 
@@ -60,7 +73,7 @@ docker login
 
 ### Environment Variables
 
-Barcha xizmatlar quyidagi environment variable-lar orqali sozlanadi:
+すべてのサービスは、次の環境変数を通じて構成されます。
 
 ```bash
 # Database
@@ -117,7 +130,7 @@ npm test
 ## 📊 Monitoring
 
 - **Health Check**: `/healthz` endpoint
-- **Metrics**: Prometheus metrics (keyingi versiyada)
+- **Metrics**: Prometheus metrics (次のバージョンでは)
 - **Logs**: Docker logs
 
 ## 🔒 Security
@@ -130,30 +143,29 @@ npm test
 
 ## 📚 API Documentation
 
-API endpoint-lar quyidagi formatda:
+API エンドポイントの形式は次のとおりです。
 
-- `POST /api/v1/auth/register` - Ro'yxatdan o'tish
-- `POST /api/v1/auth/login` - Kirish
-- `GET /api/v1/auth/me` - Foydalanuvchi ma'lumotlari
-- `POST /api/v1/jobs/` - Ish o'rinini yaratish
-- `GET /api/v1/jobs/` - Ish o'rinlarini olish
-- `POST /api/v1/resume/upload` - Rezyume yuklash
+- `POST /api/v1/auth/register` - 登録
+- `POST /api/v1/auth/login` - ログイン
+- `GET /api/v1/auth/me` - ユーザー情報
+- `POST /api/v1/jobs/` - 求人情報の作成
+- `GET /api/v1/jobs/` - 求人情報の取得
+- `POST /api/v1/resume/upload` - 履歴書のアップロード
 
 ## 🤝 Contributing
-
-1. Fork qiling
-2. Feature branch yarating (`git checkout -b feature/amazing-feature`)
-3. O'zgarishlarni commit qiling (`git commit -m 'Add amazing feature'`)
-4. Branch-ga push qiling (`git push origin feature/amazing-feature`)
-5. Pull Request yarating
+1. フォーク
+2. フィーチャーブランチを作成する (`git checkout -b feature/amazing-feature`)
+3. 変更をコミットする (`git commit -m 'Add awesome feature'')
+4. ブランチにプッシュする (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成する
 
 ## 📄 License
 
-Bu loyiha MIT litsenziyasi ostida tarqatiladi. Batafsil ma'lumot uchun `LICENSE` faylini ko'ring.
+このプロジェクトはMITライセンスに基づいて配布されています。詳細については、`LICENSE`ファイルをご覧ください。
 
 ## 📞 Support
 
-Savollar yoki muammolar bo'lsa, GitHub Issues oching yoki email orqali bog'laning.
+ご質問や問題がある場合は、GitHub Issues を開くか、メールでお問い合わせください。
 
 ## 🚀 Deployment Status
 
@@ -161,4 +173,4 @@ Savollar yoki muammolar bo'lsa, GitHub Issues oching yoki email orqali bog'lanin
 
 ---
 
-**JobMatcher Platform** - Ish beruvchilar va ish qidirayotganlar o'rtasida bog'lanish platformasi 🚀
+**JobMatcher Platform** - 雇用主と求職者をつなぐプラットフォーム(A platform for connecting employers and job seekers) 🚀
