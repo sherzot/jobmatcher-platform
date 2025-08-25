@@ -66,6 +66,11 @@ echo "💝 Offer Service build qilinmoqda..."
 docker build -f docker/Dockerfile.offer -t ${DOCKER_REGISTRY}/jobmatcher:offer-service-latest .
 docker push ${DOCKER_REGISTRY}/jobmatcher:offer-service-latest
 
+# Frontend
+echo "🌐 Frontend build qilinmoqda..."
+docker build -f docker/Dockerfile.frontend -t ${DOCKER_REGISTRY}/jobmatcher:frontend-latest .
+docker push ${DOCKER_REGISTRY}/jobmatcher:frontend-latest
+
 echo "✅ Barcha xizmatlar muvaffaqiyatli build va push qilindi!"
 
 # Production deployment
@@ -84,5 +89,6 @@ echo "   - Agent Service: ${AGENT_SERVICE_PORT:-8085}"
 echo "   - Company Service: ${COMPANY_SERVICE_PORT:-8086}"
 echo "   - Offer Service: ${OFFER_SERVICE_PORT:-8087}"
 echo "   - Parser Service: ${PARSER_SERVICE_PORT:-8089}"
+echo "   - Frontend: 3000"
 echo ""
 echo "🔍 Xizmatlarni tekshirish: docker-compose -f docker-compose.prod.yml logs -f"

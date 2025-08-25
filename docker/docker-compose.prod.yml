@@ -151,6 +151,15 @@ services:
       - mysql
     restart: unless-stopped
 
+  frontend:
+    image: ${DOCKER_REGISTRY}/jobmatcher:frontend-latest
+    container_name: jm-frontend-prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     container_name: jm-nginx-prod
