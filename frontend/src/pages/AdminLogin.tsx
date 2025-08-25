@@ -13,7 +13,11 @@ export default function AdminLogin() {
         <Card title="管理者ログイン" subtitle="(デモ: ロール切替)">
           <Button
             onClick={() =>
-              login("admin", "demo-token", { id: 1, name: "Admin" })
+              login(
+                "demo-token",
+                { id: 1, name: "Admin", email: "admin@demo.com" },
+                "admin"
+              )
             }
           >
             管理者としてログイン

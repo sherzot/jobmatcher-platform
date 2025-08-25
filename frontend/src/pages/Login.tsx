@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+type FormError = any;
 import AuthLayout from "../components/AuthLayout";
 import FormInput from "../components/FormInput";
 import PasswordInput from "../components/PasswordInput";
@@ -29,33 +31,30 @@ export default function Login() {
     formState: { errors },
   } = useForm<any>({ resolver: zodResolver(schema) });
 
-    const onSubmit = async (data: any) => {
-      setError(null);
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_AUTH}/api/v1/auth/login`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: data.email,
-              password: data.password,
-            }),
-          }
-        );
-        if (!res.ok) {
-          throw new Error(await res.text());
+  const onSubmit = async (data: any) => {
+    setError(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_AUTH}/api/v1/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: data.email,
+            password: data.password,
+          }),
         }
-        const json = await res.json(); // {access_token, user, ...}
-        login(json.access_token, json.user, "user");
-        nav("/mypage");
-      } catch (e: any) {
-        setError(
-          "ログインに失敗しました。メールとパスワードをご確認ください。"
-        );
+      );
+      if (!res.ok) {
+        throw new Error(await res.text());
       }
-    };
-
+      const json = await res.json(); // {access_token, user, ...}
+      login(json.access_token, json.user, "user");
+      nav("/mypage");
+    } catch (e: any) {
+      setError("ログインに失敗しました。メールとパスワードをご確認ください。");
+    }
+  };
 
   return (
     <AuthLayout
@@ -79,14 +78,14 @@ export default function Login() {
           name="email"
           type="email"
           register={register}
-          error={errors.email}
+          error={errors.email as FormError}
           autoComplete="email"
         />
         <PasswordInput
           label="パスワード"
           name="password"
           register={register}
-          error={errors.password}
+          error={errors.password as FormError}
           autoComplete="current-password"
         />
         <div className="flex items-center justify-between">

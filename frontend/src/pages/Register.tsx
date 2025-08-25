@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+type FormError = any;
 import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "../components/AuthLayout";
 import FormInput from "../components/FormInput";
@@ -51,34 +53,33 @@ export default function Register() {
 
   const pw = watch("password") || "";
   const score = useMemo(() => strength(pw), [pw]);
-  const bars = Array.from({ length: 4 });
+  // const bars = Array.from({ length: 4 });
 
-    const onSubmit = async (data: any) => {
-      setError(null);
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_AUTH}/api/v1/auth/register`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: data.name,
-              email: data.email,
-              password: data.password,
-            }),
-          }
-        );
-        if (!res.ok) {
-          throw new Error(await res.text());
+  const onSubmit = async (data: any) => {
+    setError(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_AUTH}/api/v1/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            password: data.password,
+          }),
         }
-        const json = await res.json(); // {access_token, user, ...}
-        login(json.access_token, json.user, "user");
-        nav("/mypage");
-      } catch (e: any) {
-        setError("登録に失敗しました。時間を置いて再度お試しください。");
+      );
+      if (!res.ok) {
+        throw new Error(await res.text());
       }
-    };
-
+      const json = await res.json(); // {access_token, user, ...}
+      login(json.access_token, json.user, "user");
+      nav("/mypage");
+    } catch (e: any) {
+      setError("登録に失敗しました。時間を置いて再度お試しください。");
+    }
+  };
 
   return (
     <AuthLayout
@@ -102,7 +103,7 @@ export default function Register() {
           label="氏名"
           name="name"
           register={register}
-          error={errors.name}
+          error={errors.name as FormError}
           autoComplete="name"
         />
         <FormInput
@@ -110,14 +111,14 @@ export default function Register() {
           name="email"
           type="email"
           register={register}
-          error={errors.email}
+          error={errors.email as FormError}
           autoComplete="email"
         />
         <PasswordInput
           label="パスワード"
           name="password"
           register={register}
-          error={errors.password}
+          error={errors.password as FormError}
           autoComplete="new-password"
         />
         {/* strength meter */}
@@ -140,7 +141,7 @@ export default function Register() {
           label="パスワード（確認）"
           name="confirm"
           register={register}
-          error={errors.confirm}
+          error={errors.confirm as FormError}
           autoComplete="new-password"
         />
 

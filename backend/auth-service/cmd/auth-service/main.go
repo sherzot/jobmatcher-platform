@@ -25,9 +25,9 @@ func main() {
 	h := &handlers.AuthHandler{DB: d, JWTSecret: cfg.JWTSecret}
 	r := chi.NewRouter()
 
-	// CORS (frontend: 5173)
+	// CORS (frontend: 5173, 4173)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

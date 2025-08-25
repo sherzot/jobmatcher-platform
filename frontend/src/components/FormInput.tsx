@@ -1,6 +1,8 @@
 import { clsx } from "clsx";
 import type { FieldError } from "react-hook-form";
 
+type FormError = FieldError & { type?: string };
+
 export default function FormInput({
   label,
   name,
@@ -14,7 +16,7 @@ export default function FormInput({
   name: string;
   type?: string;
   register: any;
-  error?: FieldError;
+  error?: FormError;
   placeholder?: string;
   autoComplete?: string;
 }) {

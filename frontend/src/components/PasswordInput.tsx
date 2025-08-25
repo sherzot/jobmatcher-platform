@@ -2,6 +2,8 @@ import { useState } from "react";
 import { clsx } from "clsx";
 import type { FieldError } from "react-hook-form";
 
+type FormError = FieldError & { type?: string };
+
 export default function PasswordInput({
   label,
   name,
@@ -13,7 +15,7 @@ export default function PasswordInput({
   label: string;
   name: string;
   register: any;
-  error?: FieldError;
+  error?: FormError;
   placeholder?: string;
   autoComplete?: string;
 }) {

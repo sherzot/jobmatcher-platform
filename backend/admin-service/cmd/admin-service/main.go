@@ -13,13 +13,15 @@ import (
 
 func main() {
 	port := os.Getenv("PORT")
-	if port == "" { port = "8080" }
+	if port == "" {
+		port = "8080"
+	}
 
 	r := chi.NewRouter()
 	// CORS — Vite dev serveri
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
-		AllowedMethods:   []string{"GET","POST","PUT","PATCH","DELETE","OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:4173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
 		MaxAge:           300,
