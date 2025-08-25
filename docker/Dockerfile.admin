@@ -1,10 +1,34 @@
-FROM golang:1.23 AS build
-WORKDIR /src
-COPY backend/admin-service/ ./admin-service/
-WORKDIR /src/admin-service
-RUN go mod tidy && CGO_ENABLED=0 go build -o /out/admin ./cmd/admin-service
+# Multi-stage build for admin-service
+FROM golang:1.23-alpine AS builder
 
-FROM gcr.io/distroless/base-debian12
-COPY --from=build /out/admin /admin
-EXPOSE 8080
-ENTRYPOINT ["/admin"]
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY backend/admin-service/go.mod backend/admin-service/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY backend/admin-service/ ./
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o admin-service ./cmd/admin-service
+
+# Final stage
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy the binary from builder stage
+COPY --from=builder /app/admin-service .
+
+# Expose port
+EXPOSE 8084
+
+# Run the binary
+CMD ["./admin-service"]
