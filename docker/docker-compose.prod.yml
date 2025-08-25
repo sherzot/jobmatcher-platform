@@ -46,7 +46,7 @@ services:
 
   # --- Go services ---
   auth-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/auth-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/auth-service:latest
     container_name: jm-auth-prod
     environment:
       - PORT=8080
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   resume-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/resume-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/resume-service:latest
     container_name: jm-resume-prod
     environment:
       PORT: "8080"
@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
 
   job-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/job-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/job-service:latest
     container_name: jm-job-prod
     environment:
       PORT: "8080"
@@ -84,7 +84,7 @@ services:
     restart: unless-stopped
 
   pdf-worker:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/pdf-worker:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/pdf-worker:latest
     container_name: jm-pdfworker-prod
     environment:
       NATS_URL: "nats://nats:4222"
@@ -97,13 +97,13 @@ services:
     restart: unless-stopped
 
   parser-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/parser-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/parser-service:latest
     container_name: jm-parser-prod
     ports: ["8089:8080"]
     restart: unless-stopped
 
   admin-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/admin-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/admin-service:latest
     container_name: jm-admin-prod
     environment:
       - PORT=8080
@@ -116,7 +116,7 @@ services:
     restart: unless-stopped
 
   agent-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/agent-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/agent-service:latest
     container_name: jm-agent-prod
     environment:
       - PORT=8080
@@ -128,7 +128,7 @@ services:
     restart: unless-stopped
 
   company-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/company-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/company-service:latest
     container_name: jm-company-prod
     environment:
       - PORT=8080
@@ -140,7 +140,7 @@ services:
     restart: unless-stopped
 
   offer-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher-platform/offer-service:latest
+    image: ${DOCKER_REGISTRY}/jobmatcher/offer-service:latest
     container_name: jm-offer-prod
     environment:
       - PORT=8080
