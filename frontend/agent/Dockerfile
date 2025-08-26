@@ -9,10 +9,12 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code and environment files
 COPY . .
 
-# Build the app
+# Build the app with environment variables
+ARG VITE_API_AUTH
+ENV VITE_API_AUTH=${VITE_API_AUTH:-http://localhost:8081}
 RUN npm run build
 
 # Production stage

@@ -3,7 +3,11 @@ version: "3.8"
 services:
   # Web Frontend (Users)
   web-frontend:
-    image: sherdev/jobmatcher:web-frontend-latest
+    build:
+      context: ../frontend/web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_AUTH: http://localhost:8081
     container_name: jm-web-frontend
     ports:
       - "4001:80"
@@ -15,7 +19,11 @@ services:
 
   # Agent Frontend
   agent-frontend:
-    image: sherdev/jobmatcher:agent-frontend-latest
+    build:
+      context: ../frontend/agent
+      dockerfile: Dockerfile
+      args:
+        VITE_API_AUTH: http://localhost:8081
     container_name: jm-agent-frontend
     ports:
       - "4002:80"
@@ -27,7 +35,11 @@ services:
 
   # Admin Frontend
   admin-frontend:
-    image: sherdev/jobmatcher:admin-frontend-latest
+    build:
+      context: ../frontend/admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_AUTH: http://localhost:8084
     container_name: jm-admin-frontend
     ports:
       - "4003:80"
