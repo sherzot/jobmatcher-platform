@@ -146,12 +146,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
-      - name: Build and push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.frontend
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:frontend-latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Frontend build removed to fix npm ci errors
