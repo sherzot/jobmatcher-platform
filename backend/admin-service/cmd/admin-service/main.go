@@ -11,11 +11,12 @@ import (
 func main() {
 	r := chi.NewRouter()
 
-	// CORS
+	// CORS (frontend: 4001, 4002, 4003)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:4001", "http://127.0.0.1:4001", "http://localhost:4002", "http://127.0.0.1:4002", "http://localhost:4003", "http://127.0.0.1:4003"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
