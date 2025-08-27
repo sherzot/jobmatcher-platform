@@ -86,10 +86,7 @@ jobs:
           echo "Package.json contents:"
           cat package.json
           echo "Installing dependencies..."
-          if ! npm ci --cache .npm-cache --verbose; then
-            echo "npm ci failed, trying npm install..."
-            npm install --cache .npm-cache --verbose
-          fi
+          npm ci --prefer-offline --no-audit
           echo "Building application..."
           npm run build
           echo "Build completed successfully!"
@@ -105,10 +102,7 @@ jobs:
           echo "Package.json contents:"
           cat package.json
           echo "Installing dependencies..."
-          if ! npm ci --cache .npm-cache --verbose; then
-            echo "npm ci failed, trying npm install..."
-            npm install --cache .npm-cache --verbose
-          fi
+          npm ci --prefer-offline --no-audit
           echo "Building application..."
           npm run build
           echo "Build completed successfully!"
@@ -124,10 +118,7 @@ jobs:
           echo "Package.json contents:"
           cat package.json
           echo "Installing dependencies..."
-          if ! npm ci --cache .npm-cache --verbose; then
-            echo "npm ci failed, trying npm install..."
-            npm install --cache .npm-cache --verbose
-          fi
+          npm ci --prefer-offline --no-audit
           echo "Building application..."
           npm run build
           echo "Build completed successfully!"
