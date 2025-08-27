@@ -142,6 +142,39 @@ jobs:
           echo "All frontend applications have been tested and built successfully!"
           echo "Ready to proceed with Docker image building and deployment."
 
+      - name: Verify build artifacts
+        run: |
+          echo "=== Verifying Build Artifacts ==="
+
+          echo "Checking web frontend build:"
+          if [ -d "frontend/web/dist" ]; then
+            echo "✅ Web frontend build directory exists"
+            ls -la frontend/web/dist/
+          else
+            echo "❌ Web frontend build directory missing"
+            exit 1
+          fi
+
+          echo "Checking admin frontend build:"
+          if [ -d "frontend/admin/dist" ]; then
+            echo "✅ Admin frontend build directory exists"
+            ls -la frontend/admin/dist/
+          else
+            echo "❌ Admin frontend build directory missing"
+            exit 1
+          fi
+
+          echo "Checking agent frontend build:"
+          if [ -d "frontend/agent/dist" ]; then
+            echo "✅ Agent frontend build directory exists"
+            ls -la frontend/agent/dist/
+          else
+            echo "❌ Agent frontend build directory missing"
+            exit 1
+          fi
+
+          echo "All build artifacts verified successfully! ✅"
+
   build-and-push:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
