@@ -33,24 +33,26 @@ jobs:
           go mod tidy
           go test ./...
 
-      - name: Test frontend builds
+      - name: Test web frontend
+        working-directory: ./frontend/web
         run: |
-          echo "Testing web frontend..."
-          cd frontend/web
+          echo "Testing web frontend in $(pwd)"
           npm ci
           npm run build
 
-          echo "Testing admin frontend..."
-          cd ../admin
+      - name: Test admin frontend
+        working-directory: ./frontend/admin
+        run: |
+          echo "Testing admin frontend in $(pwd)"
           npm ci
           npm run build
 
-          echo "Testing agent frontend..."
-          cd ../agent
+      - name: Test agent frontend
+        working-directory: ./frontend/agent
+        run: |
+          echo "Testing agent frontend in $(pwd)"
           npm ci
           npm run build
-
-          echo "All frontend builds completed successfully!"
 
   build-and-push:
     needs: test
