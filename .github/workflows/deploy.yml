@@ -445,7 +445,7 @@ jobs:
       - name: Workflow completion
         run: |
           echo ""
-          echo "🎉 WORKFLOW COMPLETION SUMMARY 🎉"
+          echo "🎯 WORKFLOW COMPLETION SUMMARY 🎯"
           echo "================================="
           echo ""
           echo "📊 Test Phase Results:"
