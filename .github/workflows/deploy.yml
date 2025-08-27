@@ -395,3 +395,27 @@ jobs:
         run: |
           echo "All services built and pushed successfully!"
           echo "Ready for deployment to production environment"
+
+      - name: Deployment preparation
+        run: |
+          echo ""
+          echo "🔧 PREPARING FOR DEPLOYMENT..."
+          echo "=============================="
+          echo ""
+          echo "📋 Services to be deployed:"
+          echo "   - Parser Service"
+          echo "   - Admin Service"
+          echo "   - Agent Service"
+          echo "   - Company Service"
+          echo "   - Job Service"
+          echo "   - Offer Service"
+          echo "   - Resume Service"
+          echo "   - PDF Worker"
+          echo "   - Auth Service"
+          echo "   - Web Frontend"
+          echo "   - Admin Frontend"
+          echo "   - Agent Frontend"
+          echo ""
+          echo "🐳 Docker images will be built and pushed..."
+          echo "🚀 Kubernetes deployment will be prepared..."
+          echo "=============================="
