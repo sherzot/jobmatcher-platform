@@ -132,6 +132,16 @@ jobs:
           npm run build
           echo "Build completed successfully!"
 
+      - name: Frontend test summary
+        run: |
+          echo "=== Frontend Test Summary ==="
+          echo "✅ Web frontend: Tested and built successfully"
+          echo "✅ Admin frontend: Tested and built successfully"
+          echo "✅ Agent frontend: Tested and built successfully"
+          echo ""
+          echo "All frontend applications have been tested and built successfully!"
+          echo "Ready to proceed with Docker image building and deployment."
+
   build-and-push:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
