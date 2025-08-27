@@ -42,6 +42,39 @@ jobs:
             frontend/admin/package-lock.json
             frontend/agent/package-lock.json
 
+      - name: Verify frontend structure
+        run: |
+          echo "=== Verifying frontend structure ==="
+          echo "Current directory: $(pwd)"
+          echo "Frontend directory contents:"
+          ls -la frontend/
+
+          echo "Checking web frontend:"
+          if [ -d "frontend/web" ] && [ -f "frontend/web/package.json" ] && [ -f "frontend/web/package-lock.json" ]; then
+            echo "✅ Web frontend structure is valid"
+          else
+            echo "❌ Web frontend structure is invalid"
+            exit 1
+          fi
+
+          echo "Checking admin frontend:"
+          if [ -d "frontend/admin" ] && [ -f "frontend/admin/package.json" ] && [ -f "frontend/admin/package-lock.json" ]; then
+            echo "✅ Admin frontend structure is valid"
+          else
+            echo "❌ Admin frontend structure is invalid"
+            exit 1
+          fi
+
+          echo "Checking agent frontend:"
+          if [ -d "frontend/agent" ] && [ -f "frontend/agent/package.json" ] && [ -f "frontend/agent/package-lock.json" ]; then
+            echo "✅ Agent frontend structure is valid"
+          else
+            echo "❌ Agent frontend structure is invalid"
+            exit 1
+          fi
+
+          echo "All frontend structures are valid! ✅"
+
       - name: Test web frontend
         working-directory: ./frontend/web
         timeout-minutes: 10
