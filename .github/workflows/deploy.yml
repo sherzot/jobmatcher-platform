@@ -44,6 +44,7 @@ jobs:
 
       - name: Test web frontend
         working-directory: ./frontend/web
+        timeout-minutes: 10
         run: |
           echo "=== Testing web frontend ==="
           echo "Working directory: $(pwd)"
@@ -59,6 +60,7 @@ jobs:
 
       - name: Test admin frontend
         working-directory: ./frontend/admin
+        timeout-minutes: 10
         run: |
           echo "=== Testing admin frontend ==="
           echo "Working directory: $(pwd)"
@@ -74,6 +76,7 @@ jobs:
 
       - name: Test agent frontend
         working-directory: ./frontend/agent
+        timeout-minutes: 10
         run: |
           echo "=== Testing agent frontend ==="
           echo "Working directory: $(pwd)"
