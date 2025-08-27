@@ -45,26 +45,47 @@ jobs:
       - name: Test web frontend
         working-directory: ./frontend/web
         run: |
-          echo "Testing web frontend in $(pwd)"
-          echo "Node modules cache location: $(npm config get cache)"
-          npm ci --cache .npm-cache
+          echo "=== Testing web frontend ==="
+          echo "Working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Package.json contents:"
+          cat package.json
+          echo "Installing dependencies..."
+          npm ci --cache .npm-cache --verbose
+          echo "Building application..."
           npm run build
+          echo "Build completed successfully!"
 
       - name: Test admin frontend
         working-directory: ./frontend/admin
         run: |
-          echo "Testing admin frontend in $(pwd)"
-          echo "Node modules cache location: $(npm config get cache)"
-          npm ci --cache .npm-cache
+          echo "=== Testing admin frontend ==="
+          echo "Working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Package.json contents:"
+          cat package.json
+          echo "Installing dependencies..."
+          npm ci --cache .npm-cache --verbose
+          echo "Building application..."
           npm run build
+          echo "Build completed successfully!"
 
       - name: Test agent frontend
         working-directory: ./frontend/agent
         run: |
-          echo "Testing agent frontend in $(pwd)"
-          echo "Node modules cache location: $(npm config get cache)"
-          npm ci --cache .npm-cache
+          echo "=== Testing agent frontend ==="
+          echo "Working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Package.json contents:"
+          cat package.json
+          echo "Installing dependencies..."
+          npm ci --cache .npm-cache --verbose
+          echo "Building application..."
           npm run build
+          echo "Build completed successfully!"
 
   build-and-push:
     needs: [test-backend, test-frontend]
