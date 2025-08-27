@@ -1,0 +1,691 @@
+# Auth Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: auth-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        tier: backend
+    spec:
+      containers:
+      - name: auth-service
+        image: sherdev/jobmatcher:auth-service-latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: JWT_SECRET
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: REDIS_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: jobmatcher
+  labels:
+    app: auth-service
+    tier: backend
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: auth-service
+    tier: backend
+  type: ClusterIP
+---
+# Admin Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: admin-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: admin-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: admin-service
+        tier: backend
+    spec:
+      containers:
+      - name: admin-service
+        image: sherdev/jobmatcher:admin-service-latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: jobmatcher
+  labels:
+    app: admin-service
+    tier: backend
+spec:
+  ports:
+  - port: 8081
+    targetPort: 8081
+  selector:
+    app: admin-service
+    tier: backend
+  type: ClusterIP
+---
+# Agent Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: agent-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: agent-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: agent-service
+        tier: backend
+    spec:
+      containers:
+      - name: agent-service
+        image: sherdev/jobmatcher:agent-service-latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-service
+  namespace: jobmatcher
+  labels:
+    app: agent-service
+    tier: backend
+spec:
+  ports:
+  - port: 8082
+    targetPort: 8082
+  selector:
+    app: agent-service
+    tier: backend
+  type: ClusterIP
+---
+# Company Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: company-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: company-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: company-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: company-service
+        tier: backend
+    spec:
+      containers:
+      - name: company-service
+        image: sherdev/jobmatcher:company-service-latest
+        ports:
+        - containerPort: 8083
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: company-service
+  namespace: jobmatcher
+  labels:
+    app: company-service
+    tier: backend
+spec:
+  ports:
+  - port: 8083
+    targetPort: 8083
+  selector:
+    app: company-service
+    tier: backend
+  type: ClusterIP
+---
+# Job Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: job-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: job-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: job-service
+        tier: backend
+    spec:
+      containers:
+      - name: job-service
+        image: sherdev/jobmatcher:job-service-latest
+        ports:
+        - containerPort: 8084
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: job-service
+  namespace: jobmatcher
+  labels:
+    app: job-service
+    tier: backend
+spec:
+  ports:
+  - port: 8084
+    targetPort: 8084
+  selector:
+    app: job-service
+    tier: backend
+  type: ClusterIP
+---
+# Offer Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: offer-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: offer-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: offer-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: offer-service
+        tier: backend
+    spec:
+      containers:
+      - name: offer-service
+        image: sherdev/jobmatcher:offer-service-latest
+        ports:
+        - containerPort: 8085
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: offer-service
+  namespace: jobmatcher
+  labels:
+    app: offer-service
+    tier: backend
+spec:
+  ports:
+  - port: 8085
+    targetPort: 8085
+  selector:
+    app: offer-service
+    tier: backend
+  type: ClusterIP
+---
+# Resume Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: resume-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: resume-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: resume-service
+        tier: backend
+    spec:
+      containers:
+      - name: resume-service
+        image: sherdev/jobmatcher:resume-service-latest
+        ports:
+        - containerPort: 8086
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jobmatcher-secrets
+              key: DB_PASSWORD
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_ENDPOINT
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_ACCESS_KEY
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_SECRET_KEY
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: resume-service
+  namespace: jobmatcher
+  labels:
+    app: resume-service
+    tier: backend
+spec:
+  ports:
+  - port: 8086
+    targetPort: 8086
+  selector:
+    app: resume-service
+    tier: backend
+  type: ClusterIP
+---
+# Parser Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parser-service-deployment
+  namespace: jobmatcher
+  labels:
+    app: parser-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: parser-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: parser-service
+        tier: backend
+    spec:
+      containers:
+      - name: parser-service
+        image: sherdev/jobmatcher:parser-service-latest
+        ports:
+        - containerPort: 8087
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: parser-service
+  namespace: jobmatcher
+  labels:
+    app: parser-service
+    tier: backend
+spec:
+  ports:
+  - port: 8087
+    targetPort: 8087
+  selector:
+    app: parser-service
+    tier: backend
+  type: ClusterIP
+---
+# PDF Worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pdf-worker-deployment
+  namespace: jobmatcher
+  labels:
+    app: pdf-worker
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pdf-worker
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: pdf-worker
+        tier: backend
+    spec:
+      containers:
+      - name: pdf-worker
+        image: sherdev/jobmatcher:pdf-worker-latest
+        ports:
+        - containerPort: 8088
+        env:
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_ENDPOINT
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_ACCESS_KEY
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: jobmatcher-config
+              key: MINIO_SECRET_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pdf-worker
+  namespace: jobmatcher
+  labels:
+    app: pdf-worker
+    tier: backend
+spec:
+  ports:
+  - port: 8088
+    targetPort: 8088
+  selector:
+    app: pdf-worker
+    tier: backend
+  type: ClusterIP

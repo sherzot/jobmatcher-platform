@@ -1,3 +1,4 @@
+import React from "react";
 import { Container, Card } from "../app/ui";
 import Navbar from "./Navbar";
 import Footer from "./Footer";

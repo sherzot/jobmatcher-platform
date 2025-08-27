@@ -10,7 +10,7 @@ export default function MyPage() {
     if (state.token && !state.user) {
       refreshMe();
     }
-  }, []);
+  }, [refreshMe, state.token, state.user]);
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />

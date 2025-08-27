@@ -35,6 +35,8 @@ docker-compose ps
 
 ### Production Deployment
 
+#### Docker Compose Deployment
+
 ```bash
 # 1. 環境設定
 cp docker/env.prod.example docker/.env.prod
@@ -44,17 +46,44 @@ cp docker/env.prod.example docker/.env.prod
 docker login
 
 # 3. 展開する
-./scripts/deploy.sh
+cd docker
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### Kubernetes Deployment
+
+```bash
+# 1. Prerequisites
+# - kubectl installed and configured
+# - Kubernetes cluster running
+# - nginx-ingress controller installed
+
+# 2. Deploy to Kubernetes
+cd k8s
+./deploy.sh
+
+# 3. Check deployment status
+kubectl get pods -n jobmatcher
+kubectl get services -n jobmatcher
+kubectl get ingress -n jobmatcher
 ```
 
 ## 📋 Prerequisites
 
+### Development
 - Docker & Docker Compose
 - Go 1.23+
 - Node.js 18+
 - MySQL 8.4
 - MinIO (S3-compatible storage)
 - NATS (Message broker)
+
+### Production (Kubernetes)
+- Kubernetes cluster (1.24+)
+- kubectl CLI tool
+- nginx-ingress controller
+- cert-manager (for SSL certificates)
+- Persistent volume support
 
 ## 🔧 Configuration
 
@@ -69,6 +98,9 @@ MYSQL_DATABASE=jobmatcher
 MYSQL_USER=jobmatcher_user
 MYSQL_PASSWORD=your_password
 
+# Redis
+REDIS_PASSWORD=your_redis_password
+
 # JWT
 JWT_SECRET=your_secret_key
 
@@ -77,8 +109,22 @@ MINIO_ROOT_USER=minio_admin
 MINIO_ROOT_PASSWORD=your_minio_password
 
 # Docker Registry
-DOCKER_REGISTRY=docker.io/sherzot
+DOCKER_REGISTRY=docker.io/sherdev
 ```
+
+### Kubernetes Configuration
+
+Kubernetes deployment uchun quyidagi fayllar mavjud:
+
+- `k8s/namespace.yaml` - Namespace konfiguratsiyasi
+- `k8s/configmap.yaml` - Umumiy konfiguratsiya
+- `k8s/secrets.yaml` - Maxfiy ma'lumotlar
+- `k8s/mysql-deployment.yaml` - MySQL deployment
+- `k8s/redis-deployment.yaml` - Redis deployment
+- `k8s/minio-deployment.yaml` - MinIO deployment
+- `k8s/backend-services.yaml` - Backend servislari
+- `k8s/frontend-services.yaml` - Frontend servislari
+- `k8s/ingress.yaml` - Ingress konfiguratsiyasi
 
 ## 🐳 Docker
 
@@ -88,8 +134,8 @@ DOCKER_REGISTRY=docker.io/sherzot
 # Individual service
 docker build -f docker/Dockerfile.auth -t jobmatcher/auth-service .
 
-# All services
-./scripts/deploy.sh
+# All services via GitHub Actions
+# Push to main branch triggers automatic build and push
 ```
 
 ### Run Services
@@ -99,66 +145,128 @@ docker build -f docker/Dockerfile.auth -t jobmatcher/auth-service .
 docker-compose up -d
 
 # Production
-docker-compose -f docker/docker-compose.prod.yml up -d
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🧪 Testing
+## ☸️ Kubernetes
+
+### Manual Deployment
 
 ```bash
-# Go services
-cd backend/auth-service
-go test ./...
+# 1. Create namespace
+kubectl apply -f k8s/namespace.yaml
 
-# Frontend
-cd frontend
-npm test
+# 2. Apply configurations
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secrets.yaml
+
+# 3. Deploy infrastructure
+kubectl apply -f k8s/mysql-deployment.yaml
+kubectl apply -f k8s/redis-deployment.yaml
+kubectl apply -f k8s/minio-deployment.yaml
+
+# 4. Deploy services
+kubectl apply -f k8s/backend-services.yaml
+kubectl apply -f k8s/frontend-services.yaml
+
+# 5. Deploy ingress
+kubectl apply -f k8s/ingress.yaml
 ```
 
-## 📊 Monitoring
+### Automated Deployment
 
-- **Health Check**: `/healthz` endpoint
-- **Metrics**: Prometheus metrics (次のバージョンでは)
-- **Logs**: Docker logs
+```bash
+# Use the deployment script
+cd k8s
+./deploy.sh
+```
 
-## 🔒 Security
+### Scaling Services
 
-- JWT-based authentication
-- Rate limiting (Nginx)
-- HTTPS enforcement
-- Security headers
-- Input validation
+```bash
+# Scale backend services
+kubectl scale deployment auth-service-deployment --replicas=3 -n jobmatcher
+kubectl scale deployment admin-service-deployment --replicas=3 -n jobmatcher
 
-## 📚 API Documentation
+# Scale frontend services
+kubectl scale deployment web-frontend-deployment --replicas=3 -n jobmatcher
+```
 
-API エンドポイントの形式は次のとおりです。
+## 🔄 CI/CD Pipeline
 
-- `POST /api/v1/auth/register` - 登録
-- `POST /api/v1/auth/login` - ログイン
-- `GET /api/v1/auth/me` - ユーザー情報
-- `POST /api/v1/jobs/` - 求人情報の作成
-- `GET /api/v1/jobs/` - 求人情報の取得
-- `POST /api/v1/resume/upload` - 履歴書のアップロード
+GitHub Actions orqali avtomatik deployment:
+
+1. **Test Stage**: Barcha servislarni test qilish
+2. **Build Stage**: Docker image larni yaratish
+3. **Push Stage**: Docker Hub ga push qilish
+4. **Deploy Stage**: Production ga deploy qilish
+
+### GitHub Secrets
+
+Quyidagi secrets ni GitHub repository ga qo'shish kerak:
+
+- `DOCKER_USERNAME`: Docker Hub username
+- `DOCKER_PASSWORD`: Docker Hub password/token
+
+## 📊 Monitoring & Logging
+
+### Health Checks
+
+Barcha servislarda health check endpoint lar mavjud:
+
+- Backend: `/health`
+- Frontend: `/`
+
+### Logs
+
+```bash
+# Pod logs
+kubectl logs -f deployment/auth-service-deployment -n jobmatcher
+
+# Service logs
+kubectl logs -f service/auth-service -n jobmatcher
+```
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **Pod CrashLoopBackOff**: Check logs and resource limits
+2. **Service Unavailable**: Verify service selectors and endpoints
+3. **Ingress Not Working**: Check nginx-ingress controller
+4. **Database Connection Failed**: Verify MySQL service and credentials
+
+### Debug Commands
+
+```bash
+# Check pod status
+kubectl get pods -n jobmatcher
+
+# Check service endpoints
+kubectl get endpoints -n jobmatcher
+
+# Check ingress status
+kubectl get ingress -n jobmatcher
+
+# Check events
+kubectl get events -n jobmatcher --sort-by='.lastTimestamp'
+```
+
+## 📚 Additional Resources
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [Docker Documentation](https://docs.docker.com/)
+- [Nginx Ingress Controller](https://kubernetes.github.io/ingress-nginx/)
+- [Cert Manager](https://cert-manager.io/docs/)
 
 ## 🤝 Contributing
-1. フォーク
-2. フィーチャーブランチを作成する (`git checkout -b feature/amazing-feature`)
-3. 変更をコミットする (`git commit -m 'Add awesome feature'')
-4. ブランチにプッシュする (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成する
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
-このプロジェクトはMITライセンスに基づいて配布されています。詳細については、`LICENSE`ファイルをご覧ください。
-
-## 📞 Support
-
-ご質問や問題がある場合は、GitHub Issues を開くか、メールでお問い合わせください。
-
-## 🚀 Deployment Status
-
-[![Deploy to Production](https://github.com/sherzot/jobmatcher-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/sherzot/jobmatcher-platform/actions/workflows/deploy.yml)
-
----
-
-**JobMatcher Platform** - 雇用主と求職者をつなぐプラットフォーム(A platform for connecting employers and job seekers) 🚀
-# Workflow restart - Mon Aug 25 17:34:05 JST 2025
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

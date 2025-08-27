@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jobmatcher
+  labels:
+    name: jobmatcher
+    app: jobmatcher-platform

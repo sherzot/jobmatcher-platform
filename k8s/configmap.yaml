@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jobmatcher-config
+  namespace: jobmatcher
+data:
+  # Database configuration
+  DB_HOST: "mysql-service"
+  DB_PORT: "3306"
+  DB_NAME: "jobmatcher"
+  
+  # Redis configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # MinIO configuration
+  MINIO_ENDPOINT: "minio-service:9000"
+  MINIO_ACCESS_KEY: "minioadmin"
+  MINIO_SECRET_KEY: "minioadmin"
+  
+  # Service ports
+  AUTH_SERVICE_PORT: "8080"
+  ADMIN_SERVICE_PORT: "8081"
+  AGENT_SERVICE_PORT: "8082"
+  COMPANY_SERVICE_PORT: "8083"
+  JOB_SERVICE_PORT: "8084"
+  OFFER_SERVICE_PORT: "8085"
+  RESUME_SERVICE_PORT: "8086"
+  PARSER_SERVICE_PORT: "8087"
+  PDF_WORKER_PORT: "8088"

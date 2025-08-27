@@ -5,6 +5,7 @@ services:
     container_name: jm-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: jobmatcher
     ports: ["3306:3306"]
     command:
       [
@@ -14,6 +15,7 @@ services:
       ]
     volumes:
       - ../_data/mysql:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -55,13 +57,13 @@ services:
 
   # --- Go services ---
   auth-service:
-    image: docker-auth-service
     build:
       context: ..
       dockerfile: docker/Dockerfile.auth
+    container_name: jm-auth
     environment:
       - PORT=8080
-      - MYSQL_DSN=jm:jm_password@tcp(mysql:3306)/jobmatcher?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:root@tcp(mysql:3306)/jobmatcher?parseTime=true&charset=utf8mb4&loc=Local
       - JWT_SECRET=local-super-secret
     ports:
       - "8081:8080"
@@ -115,3 +117,28 @@ services:
       dockerfile: docker/Dockerfile.parser
     container_name: jm-parser
     ports: ["8089:8080"]
+
+  # --- Frontend services ---
+  web-frontend:
+    build:
+      context: ../frontend/web
+      dockerfile: Dockerfile
+    container_name: jm-web-frontend
+    ports: ["3001:80"]
+    depends_on: []
+
+  agent-frontend:
+    build:
+      context: ../frontend/agent
+      dockerfile: Dockerfile
+    container_name: jm-agent-frontend
+    ports: ["3002:80"]
+    depends_on: []
+
+  admin-frontend:
+    build:
+      context: ../frontend/admin
+      dockerfile: Dockerfile
+    container_name: jm-admin-frontend
+    ports: ["3003:80"]
+    depends_on: []

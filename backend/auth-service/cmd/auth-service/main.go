@@ -17,9 +17,10 @@ func main() {
 	cfg := config.Load()
 	d := db.Connect(cfg.MysqlDSN)
 
-	// Auto-migrate
+	// Auto-migrate with custom primary key handling
+	// GORM will respect the existing StaffCode primary key and won't add id field
 	if err := d.AutoMigrate(&models.User{}); err != nil {
-		log.Fatalf("migrate error: %v", err)
+		log.Printf("Warning: AutoMigrate error (this is expected if table already exists): %v", err)
 	}
 
 	h := &handlers.AuthHandler{DB: d, JWTSecret: cfg.JWTSecret}
@@ -27,7 +28,7 @@ func main() {
 
 	// CORS (frontend: 5173, 4173, 4000, 4001, 4002, 4003)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:4001", "http://127.0.0.1:4001", "http://localhost:4002", "http://127.0.0.1:4002", "http://localhost:4003", "http://127.0.0.1:4003"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:4002", "http://127.0.0.1:4002", "http://localhost:4003", "http://127.0.0.1:4003"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

@@ -3,14 +3,17 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./
+# Build argument for frontend type
+ARG FRONTEND_TYPE=web
+
+# Copy package files for the specific frontend
+COPY frontend/${FRONTEND_TYPE}/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY frontend/ ./
+# Copy source code for the specific frontend
+COPY frontend/${FRONTEND_TYPE}/ ./
 
 # Build the app
 RUN npm run build

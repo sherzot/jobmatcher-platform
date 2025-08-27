@@ -2,13 +2,11 @@ version: "3.9"
 
 services:
   mysql:
-    image: mysql:8.4
+    image: mysql:8.0
     container_name: jm-mysql-prod
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports: ["3306:3306"]
     command:
       [
@@ -46,11 +44,13 @@ services:
 
   # --- Go services ---
   auth-service:
-    image: ${DOCKER_REGISTRY}/jobmatcher:auth-service-latest
+    build:
+      context: ../backend/auth-service
+      dockerfile: ../docker/Dockerfile.auth
     container_name: jm-auth-prod
     environment:
       - PORT=8080
-      - MYSQL_DSN=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
       - JWT_SECRET=${JWT_SECRET}
     ports:
       - "8081:8080"
@@ -78,7 +78,7 @@ services:
     container_name: jm-job-prod
     environment:
       PORT: "8080"
-      MYSQL_DSN: ${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      MYSQL_DSN: root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
     depends_on: [mysql, nats]
     ports: ["8083:8080"]
     restart: unless-stopped
@@ -107,7 +107,7 @@ services:
     container_name: jm-admin-prod
     environment:
       - PORT=8080
-      - MYSQL_DSN=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
       - JWT_SECRET=${JWT_SECRET}
     ports:
       - "8084:8080"
@@ -120,7 +120,7 @@ services:
     container_name: jm-agent-prod
     environment:
       - PORT=8080
-      - MYSQL_DSN=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
     ports:
       - "8085:8080"
     depends_on:
@@ -132,7 +132,7 @@ services:
     container_name: jm-company-prod
     environment:
       - PORT=8080
-      - MYSQL_DSN=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
     ports:
       - "8086:8080"
     depends_on:
@@ -144,7 +144,7 @@ services:
     container_name: jm-offer-prod
     environment:
       - PORT=8080
-      - MYSQL_DSN=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
+      - MYSQL_DSN=root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4&loc=Local
     ports:
       - "8087:8080"
     depends_on:

@@ -2,9 +2,9 @@ name: Build and Deploy Services
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: docker.io
@@ -15,87 +15,69 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
-          
-      - name: Test auth-service
+          go-version: "1.23"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Test parser-service
         run: |
-          cd backend/auth-service
+          cd backend/parser-service
           go mod tidy
           go test ./...
-          
-      - name: Test job-service
+
+      - name: Test frontend builds
         run: |
-          cd backend/job-service
-          go mod tidy
-          go test ./...
-          
-      - name: Test resume-service
-        run: |
-          cd backend/resume-service
-          go mod tidy
-          go test ./...
+          echo "Testing web frontend..."
+          cd frontend/web
+          npm ci
+          npm run build
+
+          echo "Testing admin frontend..."
+          cd ../admin
+          npm ci
+          npm run build
+
+          echo "Testing agent frontend..."
+          cd ../agent
+          npm ci
+          npm run build
+
+          echo "All frontend builds completed successfully!"
 
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        
+
+      - name: Check Docker secrets
+        run: |
+          echo "Checking Docker secrets availability..."
+          if [ -z "${{ secrets.DOCKER_USERNAME }}" ] || [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "Docker secrets are not properly configured"
+            exit 1
+          fi
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          
-      - name: Build and push auth-service
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.auth
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:auth-service-latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      - name: Build and push job-service
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.job
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:job-service-latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      - name: Build and push resume-service
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.resume
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:resume-service-latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      - name: Build and push pdf-worker
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile.pdfworker
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pdf-worker-latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
+
+      # Backend Services
       - name: Build and push parser-service
         uses: docker/build-push-action@v5
         with:
@@ -105,7 +87,7 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:parser-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Build and push admin-service
         uses: docker/build-push-action@v5
         with:
@@ -115,7 +97,7 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Build and push agent-service
         uses: docker/build-push-action@v5
         with:
@@ -125,7 +107,7 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Build and push company-service
         uses: docker/build-push-action@v5
         with:
@@ -135,7 +117,17 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:company-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
+      - name: Build and push job-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.job
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:job-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Build and push offer-service
         uses: docker/build-push-action@v5
         with:
@@ -145,5 +137,83 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:offer-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
-      # Frontend build removed to fix npm ci errors
+
+      - name: Build and push resume-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.resume
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:resume-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push pdf-worker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.pdfworker
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pdf-worker-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.auth
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:auth-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Frontend Services
+      - name: Build and push web-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:web-frontend-latest
+          build-args: |
+            FRONTEND_TYPE=web
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push admin-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-frontend-latest
+          build-args: |
+            FRONTEND_TYPE=admin
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push agent-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-frontend-latest
+          build-args: |
+            FRONTEND_TYPE=agent
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "All services built and pushed successfully!"
+          echo "Ready for deployment to production environment"

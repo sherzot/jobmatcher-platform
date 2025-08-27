@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react";
 
 type Role = "guest" | "user" | "agent" | "admin";
@@ -30,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("jm_auth", JSON.stringify(s));
   };
 
-  const refreshMe = async () => {
+  const refreshMe = useCallback(async () => {
     if (!state.token) return;
     try {
       const res = await fetch(
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // token eskirgan
       save({ role: "guest" });
     }
-  };
+  }, [state]);
 
   useEffect(() => {
     // App yuklanganda token bo'lsa ME tekshirilsin
@@ -56,13 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = (token: string, user: User, role: Role = "user") => {
-    save({ role, token, user });
-  };
+  const login = useCallback(
+    (token: string, user: User, role: Role = "user") => {
+      save({ role, token, user });
+    },
+    []
+  );
 
-  const logout = () => save({ role: "guest" });
+  const logout = useCallback(() => save({ role: "guest" }), []);
 
-  const value = useMemo(() => ({ state, login, logout, refreshMe }), [state]);
+  const value = useMemo(
+    () => ({ state, login, logout, refreshMe }),
+    [state, login, logout, refreshMe]
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
