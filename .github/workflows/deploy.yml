@@ -26,6 +26,10 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: |
+            frontend/web/package-lock.json
+            frontend/admin/package-lock.json
+            frontend/agent/package-lock.json
 
       - name: Test parser-service
         run: |
@@ -37,21 +41,24 @@ jobs:
         working-directory: ./frontend/web
         run: |
           echo "Testing web frontend in $(pwd)"
-          npm ci
+          echo "Node modules cache location: $(npm config get cache)"
+          npm ci --cache .npm-cache
           npm run build
 
       - name: Test admin frontend
         working-directory: ./frontend/admin
         run: |
           echo "Testing admin frontend in $(pwd)"
-          npm ci
+          echo "Node modules cache location: $(npm config get cache)"
+          npm ci --cache .npm-cache
           npm run build
 
       - name: Test agent frontend
         working-directory: ./frontend/agent
         run: |
           echo "Testing agent frontend in $(pwd)"
-          npm ci
+          echo "Node modules cache location: $(npm config get cache)"
+          npm ci --cache .npm-cache
           npm run build
 
   build-and-push:
