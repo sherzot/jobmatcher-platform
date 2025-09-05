@@ -94,7 +94,7 @@ export default function ResponsiveText({
 
   const Component = (as || variant) as keyof JSX.IntrinsicElements;
 
-  // Ensure Component is valid
+1  // Ensure Component is valid
   if (!Component || typeof Component !== "string") {
     console.error("Invalid component type:", Component);
     return <div className={textClasses}>{children}</div>;
