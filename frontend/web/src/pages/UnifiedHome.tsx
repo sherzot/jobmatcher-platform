@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
 import {
   ResponsiveLayout,
   ResponsiveCard,
@@ -138,19 +139,7 @@ export default function UnifiedHome() {
         <Container className="py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">J</span>
-                </div>
-                <ResponsiveText
-                  as="h1"
-                  size="xl"
-                  weight="bold"
-                  className="text-gray-900"
-                >
-                  JobMatcher Platform
-                </ResponsiveText>
-              </div>
+              <Logo />
             </div>
 
             <div className="flex items-center space-x-4">
@@ -377,13 +366,8 @@ export default function UnifiedHome() {
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">J</span>
-                </div>
-                <ResponsiveText as="h3" size="lg" weight="bold">
-                  JobMatcher
-                </ResponsiveText>
+              <div className="mb-4">
+                <Logo className="text-white" />
               </div>
               <ResponsiveText className="text-gray-400">
                 採用・転職の未来をつなぐプラットフォーム

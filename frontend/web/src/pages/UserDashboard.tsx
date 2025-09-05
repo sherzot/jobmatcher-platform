@@ -149,51 +149,57 @@ export default function UserDashboard() {
     const loadUserData = async () => {
       try {
         // Load resume data from API
-        const resumeResponse = await fetch(`${import.meta.env.VITE_API_RESUME}/api/v1/resume`, {
-          headers: {
-            'Authorization': `Bearer ${state.token}`,
-            'Content-Type': 'application/json'
+        const resumeResponse = await fetch(
+          `${import.meta.env.VITE_API_RESUME}/api/v1/resume`,
+          {
+            headers: {
+              Authorization: `Bearer ${state.token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
-        
+        );
+
         if (resumeResponse.ok) {
           const resumeData = await resumeResponse.json();
           setResumeData(resumeData);
           calculateCompletionPercentage(resumeData);
         } else {
           // If no resume data exists, initialize with user's basic info
-          setResumeData(prev => ({
+          setResumeData((prev) => ({
             ...prev,
             personalInfo: {
               ...prev.personalInfo,
               name: currentUser?.name || "",
               email: currentUser?.email || "",
-            }
+            },
           }));
         }
 
         // Load applications from API
-        const applicationsResponse = await fetch(`${import.meta.env.VITE_API_OFFER}/api/v1/applications`, {
-          headers: {
-            'Authorization': `Bearer ${state.token}`,
-            'Content-Type': 'application/json'
+        const applicationsResponse = await fetch(
+          `${import.meta.env.VITE_API_OFFER}/api/v1/applications`,
+          {
+            headers: {
+              Authorization: `Bearer ${state.token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
-        
+        );
+
         if (applicationsResponse.ok) {
           const applicationsData = await applicationsResponse.json();
           setApplications(applicationsData);
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error("Error loading user data:", error);
         // Initialize with basic user info if API fails
-        setResumeData(prev => ({
+        setResumeData((prev) => ({
           ...prev,
           personalInfo: {
             ...prev.personalInfo,
             name: currentUser?.name || "",
             email: currentUser?.email || "",
-          }
+          },
         }));
       }
     };
@@ -241,24 +247,27 @@ export default function UserDashboard() {
 
   const saveResumeData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_RESUME}/api/v1/resume`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${state.token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(resumeData)
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_RESUME}/api/v1/resume`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(resumeData),
+        }
+      );
 
       if (response.ok) {
-        alert('履歴書が保存されました');
+        alert("履歴書が保存されました");
         calculateCompletionPercentage(resumeData);
       } else {
-        alert('保存に失敗しました');
+        alert("保存に失敗しました");
       }
     } catch (error) {
-      console.error('Error saving resume:', error);
-      alert('保存中にエラーが発生しました');
+      console.error("Error saving resume:", error);
+      alert("保存中にエラーが発生しました");
     }
   };
 
@@ -330,7 +339,8 @@ export default function UserDashboard() {
                   ユーザーダッシュボード
                 </ResponsiveText>
                 <ResponsiveText className="text-gray-600">
-                  こんにちは、{currentUser?.name || resumeData.personalInfo.name}さん
+                  こんにちは、
+                  {currentUser?.name || resumeData.personalInfo.name}さん
                 </ResponsiveText>
               </div>
             </div>
