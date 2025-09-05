@@ -7,6 +7,7 @@ import {
   ResponsiveForm,
 } from "../components/responsive";
 import { Container, Button } from "../app/ui";
+import { useAuth } from "../app/auth/AuthProvider";
 import {
   User,
   FileText,
@@ -104,10 +105,13 @@ interface JobApplication {
 }
 
 export default function UserDashboard() {
+  const { state } = useAuth();
+  const currentUser = state.user;
+
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
-      name: "",
-      email: "",
+      name: currentUser?.name || "",
+      email: currentUser?.email || "",
       phone: "",
       address: "",
       birthDate: "",
@@ -140,101 +144,64 @@ export default function UserDashboard() {
     }
   }, []);
 
-  // Mock data
+  // Load user data from API
   useEffect(() => {
-    const mockResumeData: ResumeData = {
-      personalInfo: {
-        name: "田中太郎",
-        email: "tanaka@example.com",
-        phone: "090-1234-5678",
-        address: "東京都渋谷区",
-        birthDate: "1990-05-15",
-        nationality: "日本",
-      },
-      workExperience: [
-        {
-          id: "1",
-          company: "株式会社テクノロジー",
-          position: "フロントエンドエンジニア",
-          startDate: "2022-04",
-          endDate: "2024-01",
-          description: "React、TypeScriptを使用したWebアプリケーション開発",
-          achievements: [
-            "ユーザーエクスペリエンスの改善",
-            "パフォーマンス最適化",
-          ],
-        },
-      ],
-      education: [
-        {
-          id: "1",
-          school: "東京大学",
-          degree: "学士",
-          field: "情報工学",
-          startDate: "2008-04",
-          endDate: "2012-03",
-          gpa: "3.8",
-        },
-      ],
-      skills: [
-        { id: "1", name: "React", level: "expert", category: "Frontend" },
-        {
-          id: "2",
-          name: "TypeScript",
-          level: "advanced",
-          category: "Frontend",
-        },
-        {
-          id: "3",
-          name: "Node.js",
-          level: "intermediate",
-          category: "Backend",
-        },
-      ],
-      languages: [
-        { id: "1", language: "日本語", level: "native" },
-        { id: "2", language: "英語", level: "fluent" },
-      ],
-      preferences: {
-        desiredPosition: "フロントエンドエンジニア",
-        desiredLocation: "東京都",
-        desiredSalary: { min: 5000000, max: 8000000 },
-        workType: "full-time",
-        remoteWork: true,
-      },
+    const loadUserData = async () => {
+      try {
+        // Load resume data from API
+        const resumeResponse = await fetch(`${import.meta.env.VITE_API_RESUME}/api/v1/resume`, {
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (resumeResponse.ok) {
+          const resumeData = await resumeResponse.json();
+          setResumeData(resumeData);
+          calculateCompletionPercentage(resumeData);
+        } else {
+          // If no resume data exists, initialize with user's basic info
+          setResumeData(prev => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              name: currentUser?.name || "",
+              email: currentUser?.email || "",
+            }
+          }));
+        }
+
+        // Load applications from API
+        const applicationsResponse = await fetch(`${import.meta.env.VITE_API_OFFER}/api/v1/applications`, {
+          headers: {
+            'Authorization': `Bearer ${state.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (applicationsResponse.ok) {
+          const applicationsData = await applicationsResponse.json();
+          setApplications(applicationsData);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        // Initialize with basic user info if API fails
+        setResumeData(prev => ({
+          ...prev,
+          personalInfo: {
+            ...prev.personalInfo,
+            name: currentUser?.name || "",
+            email: currentUser?.email || "",
+          }
+        }));
+      }
     };
 
-    const mockApplications: JobApplication[] = [
-      {
-        id: "1",
-        jobId: "job1",
-        jobTitle: "シニアフロントエンドエンジニア",
-        company: "株式会社テクノロジー",
-        agent: "佐藤花子",
-        status: "first-interview",
-        appliedDate: "2024-01-15",
-        lastUpdate: "2024-01-20",
-        nextStep: "1次面接",
-        nextStepDate: "2024-01-25",
-      },
-      {
-        id: "2",
-        jobId: "job2",
-        jobTitle: "フロントエンドエンジニア",
-        company: "グローバル商事株式会社",
-        agent: "高橋美咲",
-        status: "document-screening",
-        appliedDate: "2024-01-10",
-        lastUpdate: "2024-01-18",
-        nextStep: "書類選考結果",
-        nextStepDate: "2024-01-22",
-      },
-    ];
-
-    setResumeData(mockResumeData);
-    setApplications(mockApplications);
-    calculateCompletionPercentage(mockResumeData);
-  }, []);
+    if (currentUser) {
+      loadUserData();
+    }
+  }, [currentUser, state.token]);
 
   const calculateCompletionPercentage = (data: ResumeData) => {
     let completed = 0;
@@ -270,6 +237,29 @@ export default function UserDashboard() {
     if (data.preferences.workType) completed += 1;
 
     setCompletionPercentage(Math.round((completed / total) * 100));
+  };
+
+  const saveResumeData = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_RESUME}/api/v1/resume`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${state.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(resumeData)
+      });
+
+      if (response.ok) {
+        alert('履歴書が保存されました');
+        calculateCompletionPercentage(resumeData);
+      } else {
+        alert('保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      alert('保存中にエラーが発生しました');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -340,7 +330,7 @@ export default function UserDashboard() {
                   ユーザーダッシュボード
                 </ResponsiveText>
                 <ResponsiveText className="text-gray-600">
-                  こんにちは、{resumeData.personalInfo.name}さん
+                  こんにちは、{currentUser?.name || resumeData.personalInfo.name}さん
                 </ResponsiveText>
               </div>
             </div>
@@ -626,7 +616,7 @@ export default function UserDashboard() {
                     <Download className="w-4 h-4 mr-2" />
                     ダウンロード
                   </ResponsiveButton>
-                  <ResponsiveButton>
+                  <ResponsiveButton onClick={saveResumeData}>
                     <Save className="w-4 h-4 mr-2" />
                     保存
                   </ResponsiveButton>
