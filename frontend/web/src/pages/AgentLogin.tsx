@@ -81,16 +81,20 @@ export default function AgentLogin() {
           type="email"
           placeholder="agent@example.com"
           {...register("email")}
-          error={errors.email?.message}
+          error={errors.email?.message as string}
         />
         <PasswordInput
           label="パスワード"
           placeholder="パスワードを入力"
           {...register("password")}
-          error={errors.password?.message}
+          error={errors.password?.message as string}
         />
         <div className="flex items-center justify-between">
-          <Checkbox label="ログイン状態を保持" {...register("remember")} />
+          <Checkbox
+            label="ログイン状態を保持"
+            register={register}
+            name="remember"
+          />
           <Link
             to="/forgot-password"
             className="text-sm text-blue-600 hover:text-blue-500"

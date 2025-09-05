@@ -1,25 +1,21 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import {
-  ResponsiveLayout,
   ResponsiveCard,
   ResponsiveText,
   ResponsiveButton,
 } from "../components/responsive";
-import { Container, Button } from "../app/ui";
+import { Container } from "../app/ui";
 import {
   Users,
   Building2,
   Briefcase,
   UserCheck,
-  TrendingUp,
-  Activity,
   ArrowRight,
   CheckCircle,
   Star,
   Shield,
-  Target,
 } from "lucide-react";
 
 interface User {

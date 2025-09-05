@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Container } from "../app/ui";
 import { ResponsiveText, ResponsiveButton } from "./responsive";
 import { Edit, LogOut } from "lucide-react";
