@@ -301,7 +301,6 @@ jobs:
           file: ./docker/Dockerfile.agent
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:agent-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -315,7 +314,6 @@ jobs:
           file: ./docker/Dockerfile.company
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:company-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -329,7 +327,6 @@ jobs:
           file: ./docker/Dockerfile.job
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:job-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -343,7 +340,6 @@ jobs:
           file: ./docker/Dockerfile.offer
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:offer-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -357,7 +353,6 @@ jobs:
           file: ./docker/Dockerfile.resume
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:resume-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -372,7 +367,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:auth-service-latest
-            ghcr.io/${{ github.repository }}:auth-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
@@ -385,7 +379,6 @@ jobs:
           file: ./docker/Dockerfile.pdfworker
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:pdf-worker-latest
             ghcr.io/${{ github.repository }}:pdf-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -400,7 +393,6 @@ jobs:
           file: ./docker/Dockerfile.frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:web-frontend-latest
             ghcr.io/${{ github.repository }}:web-frontend-latest
           build-args: |
             FRONTEND_TYPE=web
@@ -417,7 +409,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:admin-frontend-latest
-            ghcr.io/${{ github.repository }}:admin-frontend-latest
           build-args: |
             FRONTEND_TYPE=admin
           cache-from: type=gha
@@ -432,7 +423,6 @@ jobs:
           file: ./docker/Dockerfile.frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:agent-frontend-latest
             ghcr.io/${{ github.repository }}:agent-frontend-latest
           build-args: |
             FRONTEND_TYPE=agent
