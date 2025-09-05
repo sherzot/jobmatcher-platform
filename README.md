@@ -177,8 +177,7 @@ kubectl apply -f k8s/ingress.yaml
 
 ```bash
 # Use the deployment script
-cd k8s
-./deploy.sh
+./scripts/k8s-deploy.sh
 ```
 
 ### Scaling Services
@@ -199,7 +198,28 @@ GitHub Actions orqali avtomatik deployment:
 1. **Test Stage**: Barcha servislarni test qilish
 2. **Build Stage**: Docker image larni yaratish
 3. **Push Stage**: Docker Hub ga push qilish
-4. **Deploy Stage**: Production ga deploy qilish
+4. **Deploy Stage**: Deployment summary (K8s cluster kerak emas)
+
+### Local Development
+```bash
+# Docker Compose bilan local development
+cd docker
+docker-compose up -d
+
+# Servicelar:
+# - Web Frontend: http://localhost:3001
+# - Agent Frontend: http://localhost:3002  
+# - Admin Frontend: http://localhost:3003
+# - Backend Services: localhost:8080-8088
+# - Database: localhost:3306
+# - MinIO: localhost:9000
+```
+
+### Production Deployment
+```bash
+# K8s cluster bilan production deployment
+./scripts/k8s-deploy.sh
+```
 
 ### GitHub Secrets
 
