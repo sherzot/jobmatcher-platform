@@ -94,7 +94,9 @@ export default function CompanyDashboard() {
   const { state } = useAuth();
   const currentUser = state.user;
 
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(
+    null
+  );
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -359,7 +361,10 @@ export default function CompanyDashboard() {
                         weight="bold"
                         className="text-gray-900"
                       >
-                        {applications.filter((app) => app.status === "offer").length}
+                        {
+                          applications.filter((app) => app.status === "offer")
+                            .length
+                        }
                       </ResponsiveText>
                     </div>
                   </div>
@@ -608,16 +613,21 @@ export default function CompanyDashboard() {
                             {job.title}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {job.type === "full-time" ? "正社員" : 
-                             job.type === "part-time" ? "パート" :
-                             job.type === "contract" ? "契約社員" : "インターン"}
+                            {job.type === "full-time"
+                              ? "正社員"
+                              : job.type === "part-time"
+                              ? "パート"
+                              : job.type === "contract"
+                              ? "契約社員"
+                              : "インターン"}
                           </div>
                         </div>
                       </td>
                       <td>{job.department}</td>
                       <td>{job.location}</td>
                       <td>
-                        {job.salary.min.toLocaleString()}円〜{job.salary.max.toLocaleString()}円
+                        {job.salary.min.toLocaleString()}円〜
+                        {job.salary.max.toLocaleString()}円
                       </td>
                       <td>{job.applicationsCount}</td>
                       <td>{job.viewsCount}</td>
