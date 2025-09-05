@@ -131,6 +131,15 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [completionPercentage, setCompletionPercentage] = useState(0);
 
+  // Check authentication
+  useEffect(() => {
+    const userRole = localStorage.getItem("userRole");
+    if (!userRole || userRole !== "user") {
+      window.location.href = "/login";
+      return;
+    }
+  }, []);
+
   // Mock data
   useEffect(() => {
     const mockResumeData: ResumeData = {

@@ -50,7 +50,8 @@ export default function Login() {
       }
       const json = await res.json(); // {access_token, user, ...}
       login(json.access_token, json.user, "user");
-      nav("/mypage");
+      localStorage.setItem("userRole", "user");
+      nav("/user");
     } catch (e: any) {
       setError("ログインに失敗しました。メールとパスワードをご確認ください。");
     }

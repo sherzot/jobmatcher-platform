@@ -49,22 +49,19 @@ export default function UnifiedHome() {
   }, []);
 
   const handleRoleLogin = (role: "user" | "agent" | "admin" | "company") => {
-    localStorage.setItem("userRole", role);
-    setUser({ role });
-
-    // Navigate to appropriate dashboard
+    // Navigate to appropriate login page
     switch (role) {
       case "admin":
-        window.location.href = "http://localhost:3003/admin";
+        window.location.href = "http://localhost:3001/admin/login";
         break;
       case "agent":
-        window.location.href = "http://localhost:3002/agent";
+        window.location.href = "http://localhost:3001/agent/login";
         break;
       case "company":
-        window.location.href = "http://localhost:3001/company";
+        window.location.href = "http://localhost:3001/register";
         break;
       case "user":
-        window.location.href = "http://localhost:3001/user";
+        window.location.href = "http://localhost:3001/login";
         break;
     }
   };

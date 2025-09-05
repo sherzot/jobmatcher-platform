@@ -73,8 +73,9 @@ export default function Register() {
         throw new Error(await res.text());
       }
       const json = await res.json(); // {access_token, user, ...}
-      login(json.access_token, json.user, "user");
-      nav("/mypage");
+      login(json.access_token, json.user, "company");
+      localStorage.setItem("userRole", "company");
+      nav("/company");
     } catch (e: any) {
       setError("登録に失敗しました。時間を置いて再度お試しください。");
     }
