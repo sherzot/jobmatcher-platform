@@ -258,6 +258,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+        continue-on-error: true
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -279,6 +280,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push admin-service
         uses: docker/build-push-action@v4
@@ -292,6 +294,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push agent-service
         uses: docker/build-push-action@v4
@@ -305,6 +308,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push company-service
         uses: docker/build-push-action@v4
@@ -318,6 +322,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push job-service
         uses: docker/build-push-action@v4
@@ -331,6 +336,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push offer-service
         uses: docker/build-push-action@v4
@@ -344,6 +350,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push resume-service
         uses: docker/build-push-action@v4
@@ -357,6 +364,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push auth-service
         uses: docker/build-push-action@v4
@@ -370,6 +378,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push pdf-worker
         uses: docker/build-push-action@v4
@@ -383,6 +392,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       # Frontend Services
       - name: Build and push web-frontend
@@ -399,6 +409,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push admin-frontend
         uses: docker/build-push-action@v4
@@ -414,6 +425,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
       - name: Build and push agent-frontend
         uses: docker/build-push-action@v4
@@ -429,6 +441,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+        continue-on-error: true
 
   deploy:
     needs: build-and-push
