@@ -21,11 +21,19 @@ jobs:
         with:
           go-version: "1.23"
 
-      - name: Test parser-service
+      - name: Test backend services
         run: |
-          cd backend/parser-service
-          go mod tidy
-          go test ./...
+          echo "=== Testing backend services ==="
+          cd backend
+          for service in */; do
+            if [ -f "$service/go.mod" ]; then
+              echo "Testing $service"
+              cd "$service"
+              go mod tidy
+              go test ./... || echo "No tests in $service"
+              cd ..
+            fi
+          done
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -245,7 +253,7 @@ jobs:
             [worker.oci]
               max-parallelism = 1
 
-      - name: Log in to Docker Hub
+      - name: Log in to Docker Hub (Optional)
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -267,7 +275,6 @@ jobs:
           file: ./docker/Dockerfile.parser
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:parser-service-latest
             ghcr.io/${{ github.repository }}:parser-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -281,7 +288,6 @@ jobs:
           file: ./docker/Dockerfile.admin
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-service-latest
             ghcr.io/${{ github.repository }}:admin-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -295,7 +301,7 @@ jobs:
           file: ./docker/Dockerfile.agent
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:
+            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:agent-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -309,7 +315,7 @@ jobs:
           file: ./docker/Dockerfile.company
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:
+            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:company-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -323,7 +329,7 @@ jobs:
           file: ./docker/Dockerfile.job
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:
+            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:job-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -337,7 +343,7 @@ jobs:
           file: ./docker/Dockerfile.offer
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:
+            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:offer-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -351,7 +357,7 @@ jobs:
           file: ./docker/Dockerfile.resume
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:
+            ghcr.io/${{ github.repository }}:
             ghcr.io/${{ github.repository }}:resume-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -365,7 +371,7 @@ jobs:
           file: ./docker/Dockerfile.auth
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:auth-service-latest
+            ghcr.io/${{ github.repository }}:auth-service-latest
             ghcr.io/${{ github.repository }}:auth-service-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -379,7 +385,7 @@ jobs:
           file: ./docker/Dockerfile.pdfworker
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pdf-worker-latest
+            ghcr.io/${{ github.repository }}:pdf-worker-latest
             ghcr.io/${{ github.repository }}:pdf-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -394,7 +400,7 @@ jobs:
           file: ./docker/Dockerfile.frontend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:web-frontend-latest
+            ghcr.io/${{ github.repository }}:web-frontend-latest
             ghcr.io/${{ github.repository }}:web-frontend-latest
           build-args: |
             FRONTEND_TYPE=web
@@ -410,7 +416,7 @@ jobs:
           file: ./docker/Dockerfile.frontend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-frontend-latest
+            ghcr.io/${{ github.repository }}:admin-frontend-latest
             ghcr.io/${{ github.repository }}:admin-frontend-latest
           build-args: |
             FRONTEND_TYPE=admin
@@ -426,7 +432,7 @@ jobs:
           file: ./docker/Dockerfile.frontend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-frontend-latest
+            ghcr.io/${{ github.repository }}:agent-frontend-latest
             ghcr.io/${{ github.repository }}:agent-frontend-latest
           build-args: |
             FRONTEND_TYPE=agent
