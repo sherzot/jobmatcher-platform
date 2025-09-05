@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
-import { Container } from '../app/ui';
-import { ResponsiveText, ResponsiveButton } from './responsive';
-import { Edit, LogOut } from 'lucide-react';
+import { ReactNode } from "react";
+import { Container } from "../app/ui";
+import { ResponsiveText, ResponsiveButton } from "./responsive";
+import { Edit, LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
   title: string;
@@ -21,7 +21,7 @@ interface DashboardLayoutProps {
   }>;
   activeTab: string;
   onTabChange: (tabId: string) => void;
-  color: 'blue' | 'green' | 'purple' | 'red';
+  color: "blue" | "green" | "purple" | "red";
 }
 
 export default function DashboardLayout({
@@ -35,29 +35,29 @@ export default function DashboardLayout({
   tabs,
   activeTab,
   onTabChange,
-  color
+  color,
 }: DashboardLayoutProps) {
   const colorClasses = {
     blue: {
-      icon: 'bg-blue-100 text-blue-600',
-      border: 'border-blue-500 text-blue-600',
-      hover: 'hover:border-blue-300'
+      icon: "bg-blue-100 text-blue-600",
+      border: "border-blue-500 text-blue-600",
+      hover: "hover:border-blue-300",
     },
     green: {
-      icon: 'bg-green-100 text-green-600',
-      border: 'border-green-500 text-green-600',
-      hover: 'hover:border-green-300'
+      icon: "bg-green-100 text-green-600",
+      border: "border-green-500 text-green-600",
+      hover: "hover:border-green-300",
     },
     purple: {
-      icon: 'bg-purple-100 text-purple-600',
-      border: 'border-purple-500 text-purple-600',
-      hover: 'hover:border-purple-300'
+      icon: "bg-purple-100 text-purple-600",
+      border: "border-purple-500 text-purple-600",
+      hover: "hover:border-purple-300",
     },
     red: {
-      icon: 'bg-red-100 text-red-600',
-      border: 'border-red-500 text-red-600',
-      hover: 'hover:border-red-300'
-    }
+      icon: "bg-red-100 text-red-600",
+      border: "border-red-500 text-red-600",
+      hover: "hover:border-red-300",
+    },
   };
 
   const currentColor = colorClasses[color];
@@ -69,7 +69,9 @@ export default function DashboardLayout({
         <Container className="py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className={`w-10 h-10 ${currentColor.icon} rounded-full flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${currentColor.icon} rounded-full flex items-center justify-center`}
+              >
                 <div className="w-6 h-6" />
               </div>
               <div>
@@ -88,17 +90,14 @@ export default function DashboardLayout({
             </div>
             <div className="flex items-center space-x-3">
               {onEdit && (
-                <ResponsiveButton
-                  variant="outline"
-                  onClick={onEdit}
-                >
+                <ResponsiveButton variant="outline" onClick={onEdit}>
                   <Edit className="w-4 h-4 mr-2" />
-                  {isEditing ? '編集終了' : '編集'}
+                  {isEditing ? "編集終了" : "編集"}
                 </ResponsiveButton>
               )}
-              <ResponsiveButton 
+              <ResponsiveButton
                 variant="outline"
-                onClick={onLogout || (() => window.location.href = '/')}
+                onClick={onLogout || (() => (window.location.href = "/"))}
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 ログアウト
@@ -132,9 +131,7 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <main className="py-8">
-        <Container>
-          {children}
-        </Container>
+        <Container>{children}</Container>
       </main>
     </div>
   );

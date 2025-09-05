@@ -227,28 +227,6 @@ jobs:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    strategy:
-      matrix:
-        include:
-          - service: parser-service
-            dockerfile: ./docker/Dockerfile.parser
-          - service: admin-service
-            dockerfile: ./docker/Dockerfile.admin
-          - service: agent-service
-            dockerfile: ./docker/Dockerfile.agent
-          - service: company-service
-            dockerfile: ./docker/Dockerfile.company
-          - service: job-service
-            dockerfile: ./docker/Dockerfile.job
-          - service: offer-service
-            dockerfile: ./docker/Dockerfile.offer
-          - service: resume-service
-            dockerfile: ./docker/Dockerfile.resume
-          - service: auth-service
-            dockerfile: ./docker/Dockerfile.auth
-          - service: pdf-worker
-            dockerfile: ./docker/Dockerfile.pdfworker
-      max-parallel: 3
 
     steps:
       - uses: actions/checkout@v4
@@ -258,6 +236,8 @@ jobs:
         with:
           driver-opts: |
             image=moby/buildkit:v0.12.5
+          install: true
+          use: true
 
       - name: Check Docker secrets
         run: |
@@ -272,32 +252,145 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+          retries: 3
+          retry-delay: 10
 
-      # Backend Services
-      - name: Build and push ${{ matrix.service }}
+      # Backend Services - Sequential Build
+      - name: Build and push parser-service
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: ./docker/Dockerfile.parser
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.service }}-latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:parser-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push admin-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.admin
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push agent-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.agent
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push company-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.company
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:company-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push job-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.job
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:job-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push offer-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.offer
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:offer-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push resume-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.resume
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:resume-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.auth
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:auth-service-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push pdf-worker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.pdfworker
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pdf-worker-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
       # Frontend Services
-      - name: Build and push frontend services
+      - name: Build and push web-frontend
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/Dockerfile.frontend
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:web-frontend-latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-frontend-latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-frontend-latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:web-frontend-latest
           build-args: |
-            FRONTEND_TYPE=web,admin,agent
+            FRONTEND_TYPE=web
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push admin-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:admin-frontend-latest
+          build-args: |
+            FRONTEND_TYPE=admin
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push agent-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.frontend
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:agent-frontend-latest
+          build-args: |
+            FRONTEND_TYPE=agent
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
