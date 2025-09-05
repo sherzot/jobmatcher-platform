@@ -15,11 +15,11 @@ export default function Home() {
         <Container className="py-6 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             {/* Main Image */}
-            <div className="mb-8 sm:mb-12">
+            <div className="mb-8">
               <img
                 src={topPc}
                 alt="top-pc"
-                className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto"
+                className="w-full mx-auto"
               />
             </div>
 
