@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import Home from "../pages/Home";
+import UnifiedHome from "../pages/UnifiedHome";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Jobs from "../pages/Jobs";
@@ -14,7 +14,7 @@ import MyPage from "../pages/MyPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export const router = createBrowserRouter([
-  { path: "/", element: <Home /> },
+  { path: "/", element: <UnifiedHome /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
   { path: "/agent/login", element: <AgentLogin /> },
