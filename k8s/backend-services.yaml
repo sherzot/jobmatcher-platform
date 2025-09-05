@@ -21,35 +21,14 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: sherdev/jobmatcher:auth-service-latest
+        image: docker-auth-service:latest
         ports:
         - containerPort: 8080
         env:
-        - name: DB_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: jobmatcher-config
-              key: DB_HOST
-        - name: DB_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: jobmatcher-config
-              key: DB_PORT
-        - name: DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: jobmatcher-config
-              key: DB_NAME
-        - name: DB_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: jobmatcher-secrets
-              key: DB_USERNAME
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: jobmatcher-secrets
-              key: DB_PASSWORD
+        - name: MYSQL_DSN
+          value: "jobmatcher:password123@tcp(mysql-service:3306)/jobmatcher?parseTime=true&charset=utf8mb4&loc=Local"
+        - name: PORT
+          value: "8080"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:

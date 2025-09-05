@@ -13,7 +13,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+    "inline-flex items-center justify-center rounded-md px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const variants = {
     primary:
       "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600",
@@ -48,14 +48,14 @@ export function Card({ className, children, title, subtitle }: CardProps) {
       )}
     >
       {(title || subtitle) && (
-        <div className="border-b border-slate-100 p-4">
-          {title && <h3 className="text-lg font-semibold">{title}</h3>}
+        <div className="border-b border-slate-100 p-3 sm:p-4 lg:p-6">
+          {title && <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-900">{title}</h3>}
           {subtitle && (
-            <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2">{subtitle}</p>
           )}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className="p-3 sm:p-4 lg:p-6">{children}</div>
     </div>
   );
 }
@@ -68,7 +68,7 @@ export function Container({
   className?: string;
 }) {
   return (
-    <div className={clsx("mx-auto w-full max-w-6xl px-4", className)}>
+    <div className={clsx("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)}>
       {children}
     </div>
   );

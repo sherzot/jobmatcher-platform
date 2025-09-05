@@ -10,23 +10,20 @@ import (
 	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/db"
 	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/handlers"
 	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/middleware"
-	"github.com/sherzot/jobmatcher-platform/backend/auth-service/internal/models"
 )
 
 func main() {
 	cfg := config.Load()
 	d := db.Connect(cfg.MysqlDSN)
 
-	// Auto-migrate with custom primary key handling
-	// GORM will respect the existing StaffCode primary key and won't add id field
-	if err := d.AutoMigrate(&models.User{}); err != nil {
-		log.Printf("Warning: AutoMigrate error (this is expected if table already exists): %v", err)
-	}
+	// Manual migration - GORM AutoMigrate o'rniga
+	// users jadvali allaqachon mavjud va StaffCode primary key
+	log.Println("Database connected successfully - skipping AutoMigrate")
 
 	h := &handlers.AuthHandler{DB: d, JWTSecret: cfg.JWTSecret}
 	r := chi.NewRouter()
 
-	// CORS (frontend: 5173, 4173, 4000, 4001, 4002, 4003)
+	// CORS (frontend: 5173, 4173, 4000, 4001, 4002, 4003, 3001)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:4002", "http://127.0.0.1:4002", "http://localhost:4003", "http://127.0.0.1:4003"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

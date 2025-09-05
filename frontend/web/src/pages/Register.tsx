@@ -53,7 +53,6 @@ export default function Register() {
 
   const pw = watch("password") || "";
   const score = useMemo(() => strength(pw), [pw]);
-  // const bars = Array.from({ length: 4 });
 
   const onSubmit = async (data: any) => {
     setError(null);
@@ -86,9 +85,9 @@ export default function Register() {
       title="会員登録"
       subtitle="無料でアカウントを作成しましょう"
       side={
-        <div className="space-y-2 text-sm text-slate-600">
+        <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-slate-600">
           <p>最短で履歴書を作成し、あなたに合う求人にスピード応募。</p>
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-1 sm:space-y-2">
             <li>AIガイドで項目を埋める</li>
             <li>履歴書PDFで印刷も簡単</li>
             <li>エージェントへ即オファー</li>
@@ -96,7 +95,7 @@ export default function Register() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 max-w-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 max-w-md w-full">
         {error && <Alert variant="error" message={error} />}
 
         <FormInput
@@ -121,22 +120,29 @@ export default function Register() {
           error={errors.password as FormError}
           autoComplete="new-password"
         />
-        {/* strength meter */}
-        <div className="h-2 w-full rounded bg-slate-200 overflow-hidden">
-          <div
-            className={`h-2 transition-all ${
-              ["w-0", "w-1/4", "w-2/4", "w-3/4", "w-full"][score]
-            } ${
-              [
-                "bg-red-500",
-                "bg-red-500",
-                "bg-amber-500",
-                "bg-blue-500",
-                "bg-emerald-500",
-              ][score]
-            }`}
-          />
+        
+        {/* Password strength meter */}
+        <div className="space-y-2">
+          <div className="h-2 w-full rounded bg-slate-200 overflow-hidden">
+            <div
+              className={`h-2 transition-all duration-300 ${
+                ["w-0", "w-1/4", "w-2/4", "w-3/4", "w-full"][score]
+              } ${
+                [
+                  "bg-red-500",
+                  "bg-red-500",
+                  "bg-amber-500",
+                  "bg-blue-500",
+                  "bg-emerald-500",
+                ][score]
+              }`}
+            />
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500">
+            パスワード強度: {score === 0 ? "弱い" : score === 1 ? "弱い" : score === 2 ? "普通" : score === 3 ? "強い" : "非常に強い"}
+          </p>
         </div>
+        
         <PasswordInput
           label="パスワード（確認）"
           name="confirm"
@@ -145,35 +151,40 @@ export default function Register() {
           autoComplete="new-password"
         />
 
-        <Checkbox
-          label={
-            (
-              <span>
-                {" "}
-                <a className="underline" href="#">
-                  利用規約
-                </a>{" "}
-                と{" "}
-                <a className="underline" href="#">
-                  プライバシーポリシー
-                </a>{" "}
-                に同意します
-              </span>
-            ) as unknown as string
-          }
-          name="terms"
-          register={register}
-          required
-        />
+        <div className="space-y-3">
+          <Checkbox
+            label={
+              (
+                <span className="text-sm sm:text-base">
+                  {" "}
+                  <a className="underline hover:text-blue-700" href="#">
+                    利用規約
+                  </a>{" "}
+                  と{" "}
+                  <a className="underline hover:text-blue-700" href="#">
+                    プライバシーポリシー
+                  </a>{" "}
+                  に同意します
+                </span>
+              ) as unknown as string
+            }
+            name="terms"
+            register={register}
+            required
+          />
+          {errors.terms && (
+            <p className="text-xs sm:text-sm text-red-600">{errors.terms.message}</p>
+          )}
+        </div>
 
-        <Button className="w-full" type="submit">
+        <Button className="w-full text-sm sm:text-base py-2 sm:py-3" type="submit">
           登録する
         </Button>
 
         <Divider text="または" />
         <OAuthButtons />
 
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 text-center sm:text-left">
           すでにアカウントをお持ちですか？{" "}
           <Link to="/login" className="text-blue-700 hover:underline">
             ログイン

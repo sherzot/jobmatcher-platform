@@ -1,78 +1,83 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Container, Card, Button } from "../app/ui";
-import { RegisterCard } from "../components/AuthCard";
 import { Link } from "react-router-dom";
 import topPc from "../assets/top-pc.png";
 import topZPc from "../assets/top-z-pc.png";
-import { useAuth } from "../app/auth/AuthProvider.tsx";
 
 export default function Home() {
-	const { state } = useAuth();
-  const role = state.role; // "guest" | "user" | "agent" | "admin"
-  const isAuthed = role !== "guest";
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <Navbar />
 
+      {/* Hero Section - Responsive for all devices */}
       <section className="border-b border-slate-200 bg-white/60 backdrop-blur">
-        <Container className="py-12 md:py-16">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <img src={topPc} alt="top-pc" className="w-50" />
-              {/* <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-                AIアシスタントで高速化{" "}
-                <span className="text-red-600">求人マッチング</span>
-              </h1>
-              <p className="mt-3 text-slate-600">
-                履歴書を記入し、適切な仕事を探し、最適な求人票にオファーを即座に送信します。
-              </p> */}
-              <div className="mt-6 flex gap-3">
-                <Link to="/register">
-                  <Button>今すぐ始める</Button>
-                </Link>
-                <Link to="/jobs">
-                  <Button variant="secondary">求人を見る</Button>
-                </Link>
-              </div>
+        <Container className="py-6 sm:py-8 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            {/* Main Image */}
+            <div className="mb-8 sm:mb-12">
+              <img
+                src={topPc}
+                alt="top-pc"
+                className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto"
+              />
             </div>
-            <div>
-              {!isAuthed && (
-                <>
-                  <Card className="p-0">
-                    <div className="grid md:grid-cols-1 gap-0">
-                      <div className="p-4">
-                        <RegisterCard />
-                      </div>
-                    </div>
-                  </Card>
-                </>
-              )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Link to="/register" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3">
+                  今すぐ始める
+                </Button>
+              </Link>
+              <Link to="/jobs" className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                >
+                  求人を見る
+                </Button>
+              </Link>
             </div>
           </div>
         </Container>
       </section>
 
-      <section>
-        <div className="top-img flex flex-col items-center justify-center">
-          <img src={topZPc} alt="top-z-pc" />
+      {/* Image Section - Responsive */}
+      <section className="py-6 sm:py-8 md:py-12">
+        <div className="top-img flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+          <img
+            src={topZPc}
+            alt="top-z-pc"
+            className="w-full max-w-4xl h-auto"
+          />
         </div>
       </section>
-      <section>
-        <Container className="py-12">
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card title="AIアシスタント" subtitle="充填手順">
-              <p className="text-sm text-slate-600">
+
+      {/* Features Section - Responsive Grid */}
+      <section className="py-8 sm:py-12 lg:py-16">
+        <Container className="px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <Card title="AIアシスタント" subtitle="充填手順" className="h-full">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 「履歴書は80%完成しています。新しい仕事に3つ応募しますか？」
               </p>
             </Card>
-            <Card title="リアルタイム検索" subtitle="フィルタリングと並べ替え">
-              <p className="text-sm text-slate-600">
+            <Card
+              title="リアルタイム検索"
+              subtitle="フィルタリングと並べ替え"
+              className="h-full"
+            >
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 場所、職種、給与によるクイック検索。
               </p>
             </Card>
-            <Card title="PDFジェネレーター" subtitle="履歴書">
-              <p className="text-sm text-slate-600">
+            <Card
+              title="PDFジェネレーター"
+              subtitle="履歴書"
+              className="h-full sm:col-span-2 lg:col-span-1"
+            >
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 履歴書の PDF を自動的に作成してダウンロードします。
               </p>
             </Card>

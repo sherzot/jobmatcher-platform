@@ -61,9 +61,9 @@ export default function Login() {
       title="ログイン"
       subtitle="会員の方はこちらからログインしてください"
       side={
-        <div className="space-y-2 text-sm text-slate-600">
+        <div className="space-y-3 sm:space-y-4 text-sm sm:text-base text-slate-600">
           <p>AIが履歴書作成をサポートし、最適な求人をおすすめします。</p>
-          <ul className="list-disc list-inside">
+          <ul className="list-disc list-inside space-y-1 sm:space-y-2">
             <li>クイック応募</li>
             <li>進捗トラッキング</li>
             <li>PDF自動生成（履歴書）</li>
@@ -71,7 +71,10 @@ export default function Login() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 max-w-md">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 sm:space-y-6 max-w-md w-full"
+      >
         {error && <Alert variant="error" message={error} />}
         <FormInput
           label="メールアドレス"
@@ -88,31 +91,37 @@ export default function Login() {
           error={errors.password as FormError}
           autoComplete="current-password"
         />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <Checkbox
             label="ログイン状態を保持する"
             name="remember"
             register={register}
           />
-          <Link to="/forgot" className="text-sm text-blue-700 hover:underline">
+          <Link
+            to="/forgot"
+            className="text-sm text-blue-700 hover:underline text-center sm:text-left"
+          >
             パスワードをお忘れですか？
           </Link>
         </div>
-        <Button className="w-full" type="submit">
+        <Button
+          className="w-full text-sm sm:text-base py-2 sm:py-3"
+          type="submit"
+        >
           ログイン
         </Button>
 
         <Divider text="または" />
         <OAuthButtons />
 
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 text-center sm:text-left">
           アカウントをお持ちでないですか？{" "}
           <Link to="/register" className="text-blue-700 hover:underline">
             会員登録
           </Link>
         </p>
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs sm:text-sm text-slate-500 text-center sm:text-left">
           管理者の方は{" "}
           <Link to="/admin/login" className="underline">
             こちら

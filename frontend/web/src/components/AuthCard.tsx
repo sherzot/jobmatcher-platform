@@ -6,19 +6,23 @@ import { Button, Card } from "../app/ui";
 import { useState } from "react";
 import Divider from "../components/Divider";
 import OAuthButtons from "../components/OAuthButtons";
+
 const loginSchema = z.object({
   email: z.string().email("無効なメールアドレス"),
   password: z.string().min(6, "少なくとも6文字"),
 });
+
 const registerSchema = z.object({
   name: z.string().min(2, "少なくとも2文字"),
   email: z.string().email("無効なメールアドレス"),
   password: z.string().min(6, "少なくとも6文字"),
 });
+
 const agentloginSchema = z.object({
   email: z.string().email("無効なメールアドレス"),
   password: z.string().min(6, "少なくとも6文字"),
 });
+
 export function LoginCard() {
   const [loading, setLoading] = useState(false);
   const {
@@ -42,7 +46,7 @@ export function LoginCard() {
 
   return (
     <Card title="ログイン" subtitle="アカウントをお持ちですか？ログイン">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
         <FormInput
           label="メール"
           name="email"
@@ -59,7 +63,7 @@ export function LoginCard() {
           error={errors.password}
           autoComplete="current-password"
         />
-        <Button className="w-full" loading={loading} type="submit">
+        <Button className="w-full text-sm sm:text-base py-2 sm:py-3" loading={loading} type="submit">
           ログイン
         </Button>
         <Divider text="または" />
@@ -92,7 +96,7 @@ export function RegisterCard() {
 
   return (
     <Card title="会員登録" subtitle="新しいアカウントを作成する">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
         <FormInput
           label="お名前"
           name="name"
@@ -117,7 +121,7 @@ export function RegisterCard() {
           error={errors.password}
           autoComplete="new-password"
         />
-        <Button className="w-full" loading={loading} type="submit">
+        <Button className="w-full text-sm sm:text-base py-2 sm:py-3" loading={loading} type="submit">
           登録する
         </Button>
         <Divider text="または" />
@@ -153,7 +157,7 @@ export function AgentLoginCard() {
       title="エージェントログイン"
       subtitle="アカウントをお持ちですか？ログイン"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
         <FormInput
           label="メール"
           name="email"
@@ -174,7 +178,7 @@ export function AgentLoginCard() {
           }
           autoComplete="current-password"
         />
-        <Button className="w-full" loading={loading} type="submit">
+        <Button className="w-full text-sm sm:text-base py-2 sm:py-3" loading={loading} type="submit">
           ログイン
         </Button>
         <Divider text="または" />

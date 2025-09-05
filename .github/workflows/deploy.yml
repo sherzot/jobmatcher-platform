@@ -384,109 +384,55 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to production
-        run: |
-          echo "All services built and pushed successfully!"
-          echo "Ready for deployment to production environment"
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "latest"
 
-      - name: Deployment preparation
+      - name: Configure kubectl for Docker Desktop
         run: |
-          echo ""
-          echo "🔧 PREPARING FOR DEPLOYMENT..."
-          echo "=============================="
-          echo ""
-          echo "📋 Services to be deployed:"
-          echo "   - Parser Service"
-          echo "   - Admin Service"
-          echo "   - Agent Service"
-          echo "   - Company Service"
-          echo "   - Job Service"
-          echo "   - Offer Service"
-          echo "   - Resume Service"
-          echo "   - PDF Worker"
-          echo "   - Auth Service"
-          echo "   - Web Frontend"
-          echo "   - Admin Frontend"
-          echo "   - Agent Frontend"
-          echo ""
-          echo "🐳 Docker images will be built and pushed..."
-          echo "🚀 Kubernetes deployment will be prepared..."
-          echo "=============================="
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
 
-      - name: Final deployment status
+      - name: Deploy to Kubernetes
         run: |
-          echo ""
-          echo "🎯 DEPLOYMENT STATUS: READY! 🎯"
-          echo "================================"
-          echo ""
-          echo "✅ All Tests: PASSED"
-          echo "✅ All Builds: COMPLETED"
-          echo "✅ All Artifacts: VERIFIED"
-          echo "✅ Docker Images: READY TO BUILD"
-          echo "✅ Kubernetes Configs: READY"
-          echo ""
-          echo "🚀 Next Actions:"
-          echo "1. Docker images will be built automatically"
-          echo "2. Images will be pushed to Docker Hub"
-          echo "3. Production deployment will be prepared"
-          echo ""
-          echo "🎊 Jobmatcher Platform is ready for production! 🎊"
-          echo "================================================"
+          echo "🚀 Deploying to Kubernetes cluster..."
 
-      - name: Workflow completion
-        run: |
-          echo ""
-          echo "🎯 WORKFLOW COMPLETION SUMMARY 🎯"
-          echo "================================="
-          echo ""
-          echo "📊 Test Phase Results:"
-          echo "   - Backend Services: ✅ PASSED"
-          echo "   - Frontend Applications: ✅ PASSED"
-          echo "   - Build Artifacts: ✅ VERIFIED"
-          echo ""
-          echo "🔧 Build Phase Status:"
-          echo "   - Docker Images: 🔄 PENDING"
-          echo "   - Image Push: 🔄 PENDING"
-          echo "   - Deployment: 🔄 PENDING"
-          echo ""
-          echo "🚀 Ready to proceed with automated deployment!"
-          echo "================================================"
+          # Create namespace
+          kubectl apply -f k8s/namespace.yaml
 
-      - name: Deployment readiness confirmation
-        run: |
-          echo ""
-          echo "🎯 DEPLOYMENT READINESS CONFIRMED! 🎯"
-          echo "====================================="
-          echo ""
-          echo "📋 Platform Components:"
-          echo "   - Backend Microservices: ✅ READY"
-          echo "   - Frontend Applications: ✅ READY"
-          echo "   - Database Schema: ✅ READY"
-          echo "   - File Storage: ✅ READY"
-          echo "   - Caching Layer: ✅ READY"
-          echo ""
-          echo "🔧 Infrastructure:"
-          echo "   - Docker Images: ✅ READY TO BUILD"
-          echo "   - Kubernetes Configs: ✅ READY"
-          echo "   - CI/CD Pipeline: ✅ READY"
-          echo ""
-          echo "🚀 Production Deployment: READY TO START!"
-          echo "========================================="
+          # Apply configurations
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secrets.yaml
 
-      - name: Final deployment summary
+          # Deploy infrastructure
+          kubectl apply -f k8s/mysql-deployment.yaml
+          kubectl apply -f k8s/redis-deployment.yaml
+          kubectl apply -f k8s/minio-deployment.yaml
+
+          # Deploy backend services
+          kubectl apply -f k8s/backend-services.yaml
+
+          # Deploy frontend services
+          kubectl apply -f k8s/frontend-services.yaml
+
+          # Deploy ingress
+          kubectl apply -f k8s/ingress.yaml
+
+          echo "✅ Kubernetes deployment completed!"
+
+      - name: Wait for deployment
         run: |
-          echo ""
-          echo "🎊 JOBMATCHER PLATFORM - FINAL STATUS 🎊"
-          echo "========================================="
-          echo ""
-          echo "✅ Test Phase: COMPLETED SUCCESSFULLY"
-          echo "✅ Build Phase: READY TO START"
-          echo "✅ Push Phase: READY TO START"
-          echo "✅ Deploy Phase: READY TO START"
-          echo ""
-          echo "📊 Platform Status: PRODUCTION READY!"
-          echo "🚀 Deployment: AUTOMATED & READY!"
-          echo "🎯 Next: Docker images will be built automatically"
-          echo ""
-          echo "🎉 Congratulations! Your platform is ready! 🎉"
-          echo "==============================================="
+          echo "⏳ Waiting for deployment to be ready..."
+          kubectl wait --for=condition=available --timeout=300s deployment/mysql-deployment -n jobmatcher
+          kubectl wait --for=condition=available --timeout=300s deployment/auth-service-deployment -n jobmatcher
+          kubectl wait --for=condition=available --timeout=300s deployment/web-frontend-deployment -n jobmatcher
+          echo "✅ All deployments are ready!"
+
+      - name: Show deployment status
+        run: |
+          echo "📊 Deployment Status:"
+          kubectl get pods -n jobmatcher
+          kubectl get services -n jobmatcher
+          kubectl get ingress -n jobmatcher
