@@ -11,6 +11,7 @@ import Admin from "../pages/Admin";
 import AgentLogin from "../pages/AgentLogin";
 import AdminLogin from "../pages/AdminLogin";
 import MyPage from "../pages/MyPage";
+import UserDashboard from "../pages/UserDashboard";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -21,6 +22,9 @@ export const router = createBrowserRouter([
   { path: "/admin/login", element: <AdminLogin /> },
   // public
   { path: "/jobs", element: <Jobs /> },
+  // user dashboard
+  { path: "/user", element: <UserDashboard /> },
+  { path: "/user/*", element: <UserDashboard /> },
   // protected:
   {
     element: <ProtectedRoute />,
