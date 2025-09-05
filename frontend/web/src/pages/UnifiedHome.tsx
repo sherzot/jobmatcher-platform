@@ -138,9 +138,12 @@ export default function UnifiedHome() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <Container className="py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Logo />
-            </div>
+            {/* ここはロゴのリンク部分です */}
+            <a href="/">
+              <div className="flex items-center space-x-4">
+                <Logo />
+              </div>
+            </a>
 
             <div className="flex items-center space-x-4">
               {user.role === "guest" ? (
