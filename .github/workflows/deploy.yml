@@ -227,6 +227,9 @@ jobs:
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
@@ -238,7 +241,7 @@ jobs:
             image=moby/buildkit:v0.12.5
           install: true
           use: true
-          config-inline: |
+          buildkitd-config-inline: |
             [worker.oci]
               max-parallelism = 1
 
@@ -251,26 +254,21 @@ jobs:
           fi
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          retries: 5
-          retry-delay: 30
-          logout: false
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          retries: 3
-          retry-delay: 10
 
       # Backend Services - Sequential Build
       - name: Build and push parser-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.parser
@@ -285,7 +283,7 @@ jobs:
           pull: true
 
       - name: Build and push admin-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.admin
@@ -298,7 +296,7 @@ jobs:
           pull: true
 
       - name: Build and push agent-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.agent
@@ -309,7 +307,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push company-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.company
@@ -320,7 +318,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push job-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.job
@@ -331,7 +329,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push offer-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.offer
@@ -342,7 +340,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push resume-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.resume
@@ -353,7 +351,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push auth-service
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.auth
@@ -364,7 +362,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push pdf-worker
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.pdfworker
@@ -376,7 +374,7 @@ jobs:
 
       # Frontend Services
       - name: Build and push web-frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.frontend
@@ -389,7 +387,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push admin-frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.frontend
@@ -402,7 +400,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push agent-frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./docker/Dockerfile.frontend
