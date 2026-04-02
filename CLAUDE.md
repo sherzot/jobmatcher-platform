@@ -1,4 +1,5 @@
 1. SYSTEM ROLE & CONTEXT
+
 Quyidagi prompt Claude Code terminalga to'liq nusxalab (copy-paste) ishlatiladi. Prompt ichida barcha kerakli kontekst, qoidalar va ko'rsatmalar mavjud.
 PROMPT BOSHLANISHI
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
