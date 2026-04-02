@@ -61,6 +61,22 @@ services:
     networks:
       - jobmatcher_network
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: jobmatcher_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-jobmatcher}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-jobmatcher123}
+    ports:
+      - '8080:80'
+    depends_on:
+      - mysql
+    networks:
+      - jobmatcher_network
+
 volumes:
   mysql_data:
     driver: local
