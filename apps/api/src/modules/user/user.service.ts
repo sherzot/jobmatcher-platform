@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -17,14 +14,16 @@ export class UserService {
       where: { id: userId },
       select: {
         id: true,
-        code: true,
         email: true,
         role: true,
         status: true,
         emailVerifiedAt: true,
         lastLoginAt: true,
         createdAt: true,
-        profile: true,
+        candidate: true,
+        company: { select: { id: true, companyCode: true, name: true, status: true } },
+        agent:    { select: { id: true, agentCode: true, displayName: true } },
+        admin:    { select: { id: true, adminCode: true, displayName: true } },
       },
     });
 
@@ -35,16 +34,19 @@ export class UserService {
     return user;
   }
 
-  // ── Update profile (基本情報) ──────────────────────────────
+  // ── Update candidate profile (基本情報) ────────────────────
 
   async updateProfile(userId: number, dto: UpdateProfileDto) {
-    const profile = await this.prisma.profile.findUnique({ where: { userId } });
+    const candidate = await this.prisma.candidate.findUnique({ where: { userId } });
 
-    if (!profile) {
-      throw new NotFoundException({ code: 'PROFILE_NOT_FOUND', message: 'プロフィールが見つかりません。' });
+    if (!candidate) {
+      throw new NotFoundException({
+        code: 'CANDIDATE_NOT_FOUND',
+        message: '候補者プロフィールが見つかりません。',
+      });
     }
 
-    const updated = await this.prisma.profile.update({
+    return this.prisma.candidate.update({
       where: { userId },
       data: {
         ...(dto.firstName !== undefined && { firstName: dto.firstName }),
@@ -72,20 +74,21 @@ export class UserService {
         ...(dto.strengths !== undefined && { strengths: dto.strengths }),
       },
     });
-
-    return updated;
   }
 
   // ── Update preferences (希望条件) ──────────────────────────
 
   async updatePreferences(userId: number, dto: UpdatePreferencesDto) {
-    const profile = await this.prisma.profile.findUnique({ where: { userId } });
+    const candidate = await this.prisma.candidate.findUnique({ where: { userId } });
 
-    if (!profile) {
-      throw new NotFoundException({ code: 'PROFILE_NOT_FOUND', message: 'プロフィールが見つかりません。' });
+    if (!candidate) {
+      throw new NotFoundException({
+        code: 'CANDIDATE_NOT_FOUND',
+        message: '候補者プロフィールが見つかりません。',
+      });
     }
 
-    const updated = await this.prisma.profile.update({
+    return this.prisma.candidate.update({
       where: { userId },
       data: {
         ...(dto.desiredJobTypes !== undefined && {
@@ -100,7 +103,5 @@ export class UserService {
         ...(dto.isOpenToWork !== undefined && { isOpenToWork: dto.isOpenToWork }),
       },
     });
-
-    return updated;
   }
 }

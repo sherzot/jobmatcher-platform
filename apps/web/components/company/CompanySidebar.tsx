@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { MOCK_COMPANY, MOCK_MESSAGES } from '@/lib/mock/company';
+import { LogoutButton } from '@/components/layout/LogoutButton';
 
 const NAV_ITEMS = [
   {
@@ -126,12 +127,7 @@ export function CompanySidebar() {
           </svg>
           求人サイトを見る
         </Link>
-        <button className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">
-          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          ログアウト
-        </button>
+        <LogoutButton className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50" />
       </div>
     </aside>
   );

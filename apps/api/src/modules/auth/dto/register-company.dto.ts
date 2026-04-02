@@ -31,4 +31,14 @@ export class RegisterCompanyDto {
   @IsString()
   @MaxLength(100)
   prefecture?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  businessRegNumber?: string; // 法人番号 / registration number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  registrationNote?: string; // Message to agent during registration
 }

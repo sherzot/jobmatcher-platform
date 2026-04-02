@@ -35,7 +35,8 @@ function RegisterForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock: redirect to dashboard after registration
+    // Mock: candidates always go to /dashboard after registration
+    // TODO: replace with real API call → POST /api/auth/register
     router.push('/dashboard');
   };
 

@@ -4,6 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { MOCK_AGENT } from '@/lib/mock/agent';
+import { LogoutButton } from '@/components/layout/LogoutButton';
+import { MOCK_PENDING_COMPANIES } from '@/lib/mock/pending-companies';
+
+const PENDING_COUNT = MOCK_PENDING_COMPANIES.filter(
+  (c) => c.status === 'PENDING_APPROVAL',
+).length;
 
 const NAV_ITEMS = [
   {
@@ -12,6 +18,16 @@ const NAV_ITEMS = [
     icon: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    href: '/agent/approvals',
+    label: '企業審査',
+    badge: PENDING_COUNT,
+    icon: (
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -85,7 +101,6 @@ export function AgentSidebar() {
             <p className="truncate text-xs text-gray-400">{MOCK_AGENT.code}</p>
           </div>
         </div>
-        {/* Quick stats */}
         <div className="mt-3 grid grid-cols-3 divide-x divide-gray-100 rounded-lg bg-gray-50 text-center text-xs">
           <div className="py-2">
             <p className="font-bold text-violet-600">{MOCK_AGENT.totalCompanies}</p>
@@ -103,7 +118,7 @@ export function AgentSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -111,16 +126,23 @@ export function AgentSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-violet-50 text-violet-700'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
               )}
             >
-              <span className={isActive ? 'text-violet-600' : 'text-gray-400'}>
-                {item.icon}
-              </span>
-              {item.label}
+              <div className="flex items-center gap-3">
+                <span className={isActive ? 'text-violet-600' : 'text-gray-400'}>
+                  {item.icon}
+                </span>
+                {item.label}
+              </div>
+              {item.badge ? (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                  {item.badge}
+                </span>
+              ) : null}
             </Link>
           );
         })}
@@ -137,12 +159,7 @@ export function AgentSidebar() {
           </svg>
           求人サイトを見る
         </Link>
-        <button className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50">
-          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          ログアウト
-        </button>
+        <LogoutButton className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50" />
       </div>
     </aside>
   );

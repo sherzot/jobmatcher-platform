@@ -21,38 +21,48 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 
-  // ── Auto-generate human-readable codes after creation ─────────
+  // ─────────────────────────────────────────────────────────────
+  // Auto-generate BUSINESS IDENTIFIER codes after record creation
+  //
+  // | Model       | Field       | Pattern     | Example      |
+  // |-------------|-------------|-------------|--------------|
+  // | Candidate   | userCode    | U + 7-digit | U0000001     |
+  // | Company     | companyCode | C + 7-digit | C0000001     |
+  // | Agent       | agentCode   | A + 7-digit | A0000001     |
+  // | Admin       | adminCode   | admin + id  | admin1       |
+  // | Job         | jobCode     | J + 7-digit | J0000001     |
+  // | Application | appCode     | APP + 7-dig | APP0000001   |
+  // ─────────────────────────────────────────────────────────────
   private registerCodeMiddleware(): void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this as any).$use(async (params: any, next: any) => {
       const result = await next(params);
 
-      if (params.action !== 'create') return result;
+      if (params.action !== 'create' || !result?.id) return result;
 
-      const codeMap: Record<string, string> = {
-        User:        'U',
-        Job:         'J',
-        Company:     'C',
-        Agent:       'A',
-        Application: 'APP',
+      type CodeConfig = { field: string; value: (id: number) => string };
+      const modelCodeMap: Record<string, CodeConfig> = {
+        Candidate:   { field: 'userCode',    value: (id) => `U${String(id).padStart(7, '0')}` },
+        Company:     { field: 'companyCode', value: (id) => `C${String(id).padStart(7, '0')}` },
+        Agent:       { field: 'agentCode',   value: (id) => `A${String(id).padStart(7, '0')}` },
+        Admin:       { field: 'adminCode',   value: (id) => `admin${id}` },
+        Job:         { field: 'jobCode',     value: (id) => `J${String(id).padStart(7, '0')}` },
+        Application: { field: 'appCode',     value: (id) => `APP${String(id).padStart(7, '0')}` },
       };
 
-      const prefix = codeMap[params.model];
-      if (!prefix || !result?.id) return result;
+      const config = modelCodeMap[params.model];
+      if (!config) return result;
 
-      const padded =
-        prefix === 'APP'
-          ? `APP${String(result.id).padStart(7, '0')}`
-          : `${prefix}${String(result.id).padStart(7, '0')}`;
+      const code = config.value(result.id);
+      const modelKey = params.model.charAt(0).toLowerCase() + params.model.slice(1);
 
-      const modelName = params.model as string;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (this as any)[modelName.charAt(0).toLowerCase() + modelName.slice(1)].update({
+      await (this as any)[modelKey].update({
         where: { id: result.id },
-        data: { code: padded },
+        data: { [config.field]: code },
       });
 
-      return { ...result, code: padded };
+      return { ...result, [config.field]: code };
     });
   }
 }

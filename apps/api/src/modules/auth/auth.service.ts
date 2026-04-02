@@ -1,13 +1,14 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UserRole, UserStatus } from '@prisma/client';
+import { CompanyStatus, UserRole, UserStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterCandidateDto } from './dto/register-candidate.dto';
@@ -41,33 +42,40 @@ export class AuthService {
         password: hashedPassword,
         role: UserRole.CANDIDATE,
         status: UserStatus.PENDING_VERIFICATION,
-        profile: {
+        candidate: {
           create: {
             lastName: dto.lastName,
             firstName: dto.firstName,
           },
         },
       },
-      select: { id: true, code: true, email: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        candidate: { select: { id: true, userCode: true } },
+      },
     });
 
-    // TODO: send verification email with code (notification module)
-    this.logger.log(`Candidate registered: ${user.email} — verification code: ${verificationCode}`);
+    // TODO: send verification email with verificationCode (notification module)
+    this.logger.log(
+      `Candidate registered: ${user.email} — verification code: ${verificationCode}`,
+    );
 
     return {
       message: '登録が完了しました。メールをご確認ください。',
       userId: user.id,
-      code: user.code,
+      userCode: user.candidate?.userCode,
     };
   }
 
   // ── Register Company ───────────────────────────────────────
+  // Company status starts as PENDING_APPROVAL — agent must approve before login
 
   async registerCompany(dto: RegisterCompanyDto) {
     await this.assertEmailUnique(dto.email);
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const verificationCode = this.generateVerificationCode();
 
     const user = await this.prisma.user.create({
       data: {
@@ -81,28 +89,31 @@ export class AuthService {
             nameEn: dto.companyNameEn,
             industry: dto.industry,
             prefecture: dto.prefecture,
-            isVerified: false,
-            isActive: false, // active only after agent verifies
+            businessRegNumber: dto.businessRegNumber,
+            registrationNote: dto.registrationNote,
+            status: CompanyStatus.PENDING_APPROVAL,
+            isActive: false,
           },
         },
       },
       select: {
         id: true,
-        code: true,
         email: true,
         role: true,
-        company: { select: { id: true, code: true, name: true } },
+        company: { select: { id: true, companyCode: true, name: true, status: true } },
       },
     });
 
-    this.logger.log(`Company registered: ${user.email} — awaiting agent verification`);
-    // TODO: notify admins/agents about new company registration
+    this.logger.log(`Company registered: ${user.email} — awaiting agent approval`);
+
+    // TODO: send notification to all agents (notification module)
 
     return {
-      message: '登録が完了しました。担当エージェントが内容を確認後、アカウントが有効化されます。',
+      message:
+        '登録が完了しました。担当エージェントが内容を確認後、アカウントが有効化されます。',
       userId: user.id,
       companyId: user.company?.id,
-      companyCode: user.company?.code,
+      companyCode: user.company?.companyCode,
     };
   }
 
@@ -113,12 +124,15 @@ export class AuthService {
       where: { email: dto.email.toLowerCase() },
       select: {
         id: true,
-        code: true,
         email: true,
         password: true,
         role: true,
         status: true,
         emailVerifiedAt: true,
+        candidate: { select: { userCode: true } },
+        company:   { select: { companyCode: true, status: true } },
+        agent:     { select: { agentCode: true } },
+        admin:     { select: { adminCode: true } },
       },
     });
 
@@ -144,25 +158,37 @@ export class AuthService {
       });
     }
 
-    // COMPANY accounts need agent verification before login
-    if (user.role === UserRole.COMPANY && user.status === UserStatus.PENDING_VERIFICATION) {
-      throw new UnauthorizedException({
-        code: 'PENDING_VERIFICATION',
-        message: '担当エージェントがアカウントを確認中です。確認完了後にログインできます。',
-      });
+    // Company must be approved by agent before login
+    if (user.role === UserRole.COMPANY) {
+      const companyStatus = user.company?.status;
+      if (companyStatus === CompanyStatus.PENDING_APPROVAL) {
+        throw new UnauthorizedException({
+          code: 'COMPANY_PENDING_APPROVAL',
+          message:
+            '担当エージェントが会社情報を審査中です。承認後にログインできます。',
+        });
+      }
+      if (companyStatus === CompanyStatus.REJECTED) {
+        throw new ForbiddenException({
+          code: 'COMPANY_REJECTED',
+          message: '登録が承認されませんでした。詳細はサポートにお問い合わせください。',
+        });
+      }
     }
 
-    // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
 
+    // Resolve the business identifier for this role
+    const businessCode = this.resolveBusinessCode(user);
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
-      code: user.code,
+      businessCode,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -170,7 +196,6 @@ export class AuthService {
       this.signRefreshToken(payload),
     ]);
 
-    // Store hashed refresh token
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
@@ -184,7 +209,7 @@ export class AuthService {
       refreshToken,
       user: {
         id: user.id,
-        code: user.code,
+        businessCode,
         email: user.email,
         role: user.role,
       },
@@ -194,12 +219,8 @@ export class AuthService {
   // ── Refresh tokens ─────────────────────────────────────────
 
   async refresh(payload: JwtPayload & { refreshToken: string }) {
-    // Verify refresh token exists and is not expired
     const storedTokens = await this.prisma.refreshToken.findMany({
-      where: {
-        userId: payload.sub,
-        expiresAt: { gt: new Date() },
-      },
+      where: { userId: payload.sub, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
       take: 10,
     });
@@ -208,7 +229,6 @@ export class AuthService {
     for (const stored of storedTokens) {
       if (await bcrypt.compare(payload.refreshToken, stored.token)) {
         tokenValid = true;
-        // Rotate: delete old token
         await this.prisma.refreshToken.delete({ where: { id: stored.id } });
         break;
       }
@@ -225,7 +245,7 @@ export class AuthService {
       sub: payload.sub,
       email: payload.email,
       role: payload.role,
-      code: payload.code,
+      businessCode: payload.businessCode,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -247,15 +267,12 @@ export class AuthService {
   // ── Logout ─────────────────────────────────────────────────
 
   async logout(userId: number): Promise<void> {
-    // Invalidate all refresh tokens for this user
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
   }
 
   // ── Verify email ───────────────────────────────────────────
 
   async verifyEmail(userId: number, code: string): Promise<void> {
-    // In production: look up code from Redis/DB
-    // For now: accept any 6-digit code (dev mode)
     if (!/^\d{6}$/.test(code)) {
       throw new BadRequestException({
         code: 'INVALID_CODE',
@@ -279,12 +296,29 @@ export class AuthService {
       where: { id: userId },
       data: {
         emailVerifiedAt: new Date(),
-        status: user.role === UserRole.CANDIDATE ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION,
+        // Candidates become ACTIVE immediately; companies stay PENDING_VERIFICATION until agent approves
+        status:
+          user.role === UserRole.CANDIDATE ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION,
       },
     });
   }
 
   // ── Private helpers ────────────────────────────────────────
+
+  private resolveBusinessCode(user: {
+    role: UserRole;
+    candidate?: { userCode: string } | null;
+    company?:   { companyCode: string } | null;
+    agent?:     { agentCode: string } | null;
+    admin?:     { adminCode: string } | null;
+  }): string {
+    switch (user.role) {
+      case UserRole.CANDIDATE: return user.candidate?.userCode ?? '';
+      case UserRole.COMPANY:   return user.company?.companyCode ?? '';
+      case UserRole.AGENT:     return user.agent?.agentCode ?? '';
+      case UserRole.ADMIN:     return user.admin?.adminCode ?? '';
+    }
+  }
 
   private async assertEmailUnique(email: string): Promise<void> {
     const existing = await this.prisma.user.findUnique({

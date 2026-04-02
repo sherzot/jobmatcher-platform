@@ -31,9 +31,17 @@ enum UserStatus {
   PENDING_VERIFICATION
 }
 
+/// Company registration approval status (set by Agent)
+enum CompanyStatus {
+  PENDING_APPROVAL  // Registered, waiting agent review
+  APPROVED          // Agent approved — can login and operate
+  REJECTED          // Agent rejected — must re-apply or contact support
+  SUSPENDED         // Suspended by Admin
+}
+
 enum JobStatus {
   DRAFT
-  PENDING_REVIEW  // Company submitted, waiting agent approval (アルバイト jobs only)
+  PENDING_REVIEW  // Company submitted, waiting agent approval
   ACTIVE
   PAUSED
   CLOSED
@@ -42,9 +50,9 @@ enum JobStatus {
 }
 
 enum SalaryType {
-  HOURLY    // 時給 — always requires agent review
-  MONTHLY   // 月給 — requires review if jobType = PART_TIME
-  ANNUAL    // 年収 — never requires review
+  HOURLY    // 時給
+  MONTHLY   // 月給
+  ANNUAL    // 年収
 }
 
 enum JobType {
@@ -94,12 +102,12 @@ enum JapaneseLevel {
 }
 
 enum ConversationType {
-  APPLICATION_AGENT_CANDIDATE    // Agent ↔ Candidate about a specific application
-  APPLICATION_AGENT_COMPANY      // Agent ↔ Company about a specific candidate
-  APPLICATION_CANDIDATE_COMPANY  // Direct (agent-enabled only)
-  GENERAL_AGENT_CANDIDATE        // General — not tied to a specific job
-  GENERAL_AGENT_COMPANY          // General — not tied to a specific job
-  ADMIN_SUPPORT                  // Admin ↔ any role
+  APPLICATION_AGENT_CANDIDATE
+  APPLICATION_AGENT_COMPANY
+  APPLICATION_CANDIDATE_COMPANY
+  GENERAL_AGENT_CANDIDATE
+  GENERAL_AGENT_COMPANY
+  ADMIN_SUPPORT
 }
 
 enum MessageType {
@@ -115,32 +123,37 @@ enum NotificationType {
   NEW_JOB_MATCH
   INTERVIEW_SCHEDULED
   OFFER_RECEIVED
+  COMPANY_REGISTRATION         // Agent notified: new company pending approval
+  COMPANY_APPROVED             // Company notified: approved by agent
+  COMPANY_REJECTED             // Company notified: rejected by agent
   SYSTEM
 }
 
 // ─────────────────────────────────────────────────────────────
-// USER
+// USER  (auth table only — no business code here)
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id        Int        @id @default(autoincrement())
-  code      String     @unique @default("") @db.VarChar(12) // U0000001
-  email     String     @unique @db.VarChar(255)
-  password  String     @db.VarChar(255)
-  role      UserRole   @default(CANDIDATE)
-  status    UserStatus @default(PENDING_VERIFICATION)
+  id       Int        @id @default(autoincrement())
+  email    String     @unique @db.VarChar(255)
+  password String     @db.VarChar(255)
+  role     UserRole   @default(CANDIDATE)
+  status   UserStatus @default(PENDING_VERIFICATION)
 
   emailVerifiedAt DateTime?
   lastLoginAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  // Relations
-  profile       Profile?
-  agent         Agent?
-  company       Company?
+  // Role-specific profiles (only one is populated per user)
+  candidate Candidate?
+  agent     Agent?
+  company   Company?
+  admin     Admin?
+
+  // Cross-role relations
   applications  Application[]
-  sentMessages  Message[]        @relation("SentMessages")
+  sentMessages  Message[]      @relation("SentMessages")
   notifications Notification[]
   refreshTokens RefreshToken[]
 
@@ -151,29 +164,32 @@ model User {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PROFILE (Candidate 基本情報)
+// CANDIDATE  (ish izlovchi — role = CANDIDATE)
+// BUSINESS IDENTIFIER: user_code = U0000001
 // ─────────────────────────────────────────────────────────────
 
-model Profile {
-  id     Int  @id @default(autoincrement())
+model Candidate {
+  id       Int    @id @default(autoincrement())
+  userCode String @unique @default("") @db.VarChar(12) // U0000001 — auto-set after insert
+
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // 基本情報
-  firstName      String  @db.VarChar(100)
-  lastName       String  @db.VarChar(100)
-  firstNameKana  String? @db.VarChar(100) // フリガナ
-  lastNameKana   String? @db.VarChar(100)
-  dateOfBirth    DateTime?
-  gender         String? @db.VarChar(20)
-  phone          String? @db.VarChar(20)
-  avatarUrl      String? @db.VarChar(500)
+  firstName     String  @db.VarChar(100)
+  lastName      String  @db.VarChar(100)
+  firstNameKana String? @db.VarChar(100)
+  lastNameKana  String? @db.VarChar(100)
+  dateOfBirth   DateTime?
+  gender        String? @db.VarChar(20)
+  phone         String? @db.VarChar(20)
+  avatarUrl     String? @db.VarChar(500)
 
   // Location
-  country        String? @db.VarChar(100)
-  prefecture     String? @db.VarChar(100) // 都道府県
-  city           String? @db.VarChar(100)
-  address        String? @db.Text
+  country    String? @db.VarChar(100)
+  prefecture String? @db.VarChar(100)
+  city       String? @db.VarChar(100)
+  address    String? @db.Text
 
   // Work preferences 希望条件
   desiredJobTypes  String? @db.Text // JSON array
@@ -189,9 +205,9 @@ model Profile {
   otherLanguages String?       @db.Text // JSON array
 
   // Visa
-  nationality    String?    @db.VarChar(100)
-  visaStatus     VisaStatus @default(NOT_REQUIRED)
-  visaExpiry     DateTime?
+  nationality String?    @db.VarChar(100)
+  visaStatus  VisaStatus @default(NOT_REQUIRED)
+  visaExpiry  DateTime?
 
   // Career summary
   yearsOfExperience Int?
@@ -206,10 +222,10 @@ model Profile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   resume Resume?
 
-  @@map("profiles")
+  @@index([userCode])
+  @@map("candidates")
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -217,22 +233,21 @@ model Profile {
 // ─────────────────────────────────────────────────────────────
 
 model Resume {
-  id        Int     @id @default(autoincrement())
-  profileId Int     @unique
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  candidateId Int       @unique
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 
-  title        String  @default("My Resume") @db.VarChar(200)
-  isPublic     Boolean @default(false)
-  pdfUrl       String? @db.VarChar(500) // generated PDF
-  uploadedPdfUrl String? @db.VarChar(500) // original uploaded PDF
+  title          String  @default("My Resume") @db.VarChar(200)
+  isPublic       Boolean @default(false)
+  pdfUrl         String? @db.VarChar(500)
+  uploadedPdfUrl String? @db.VarChar(500)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  educations    Education[]
-  experiences   Experience[]
-  skills        Skill[]
+  educations     Education[]
+  experiences    Experience[]
+  skills         Skill[]
   qualifications Qualification[]
 
   @@map("resumes")
@@ -244,14 +259,14 @@ model Education {
   resumeId Int
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  schoolName   String  @db.VarChar(200) // 学校名
-  faculty      String? @db.VarChar(200) // 学部・学科
-  degree       String? @db.VarChar(100) // 学位
-  startDate    String  @db.VarChar(20)  // YYYY年MM月
-  endDate      String? @db.VarChar(20)  // YYYY年MM月 or null (在学中)
-  isGraduated  Boolean @default(true)
-  description  String? @db.Text
-  sortOrder    Int     @default(0)
+  schoolName  String  @db.VarChar(200)
+  faculty     String? @db.VarChar(200)
+  degree      String? @db.VarChar(100)
+  startDate   String  @db.VarChar(20)
+  endDate     String? @db.VarChar(20)
+  isGraduated Boolean @default(true)
+  description String? @db.Text
+  sortOrder   Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -265,15 +280,15 @@ model Experience {
   resumeId Int
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  companyName  String  @db.VarChar(200) // 会社名
-  position     String  @db.VarChar(200) // 役職・職種
-  employeeCount String? @db.VarChar(50) // 従業員数
-  startDate    String  @db.VarChar(20)  // YYYY年MM月
-  endDate      String? @db.VarChar(20)  // null = 現職
-  isCurrent    Boolean @default(false)
-  description  String? @db.Text         // 業務内容
-  achievements String? @db.Text         // 実績
-  sortOrder    Int     @default(0)
+  companyName   String  @db.VarChar(200)
+  position      String  @db.VarChar(200)
+  employeeCount String? @db.VarChar(50)
+  startDate     String  @db.VarChar(20)
+  endDate       String? @db.VarChar(20)
+  isCurrent     Boolean @default(false)
+  description   String? @db.Text
+  achievements  String? @db.Text
+  sortOrder     Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -287,10 +302,10 @@ model Skill {
   resumeId Int
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  name      String @db.VarChar(100)
-  level     String? @db.VarChar(50) // beginner / intermediate / advanced / expert
+  name      String  @db.VarChar(100)
+  level     String? @db.VarChar(50)
   yearsUsed Int?
-  sortOrder Int    @default(0)
+  sortOrder Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -304,11 +319,11 @@ model Qualification {
   resumeId Int
   resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  name        String  @db.VarChar(200)  // 資格名
-  issuedBy    String? @db.VarChar(200)  // 発行機関
-  issuedDate  String? @db.VarChar(20)   // YYYY年MM月
-  expiryDate  String? @db.VarChar(20)
-  sortOrder   Int     @default(0)
+  name       String  @db.VarChar(200)
+  issuedBy   String? @db.VarChar(200)
+  issuedDate String? @db.VarChar(20)
+  expiryDate String? @db.VarChar(20)
+  sortOrder  Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -317,14 +332,16 @@ model Qualification {
 }
 
 // ─────────────────────────────────────────────────────────────
-// COMPANY
+// COMPANY  (role = COMPANY)
+// BUSINESS IDENTIFIER: company_code = C0000001
+// Registration requires Agent approval before login is allowed
 // ─────────────────────────────────────────────────────────────
 
 model Company {
-  id   Int    @id @default(autoincrement())
-  code String @unique @default("") @db.VarChar(12) // C0000001
+  id          Int           @id @default(autoincrement())
+  companyCode String        @unique @default("") @db.VarChar(12) // C0000001 — auto-set after insert
+  status      CompanyStatus @default(PENDING_APPROVAL)
 
-  // Linked user account (role = COMPANY)
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -335,8 +352,8 @@ model Company {
   websiteUrl    String? @db.VarChar(500)
   description   String? @db.Text
   industry      String? @db.VarChar(100)
-  employeeCount String? @db.VarChar(50) // e.g. "50-100"
-  founded       Int?    // year
+  employeeCount String? @db.VarChar(50)
+  founded       Int?
 
   // Location
   country    String? @db.VarChar(100)
@@ -344,27 +361,35 @@ model Company {
   city       String? @db.VarChar(100)
   address    String? @db.Text
 
-  isVerified Boolean @default(false)
-  isActive   Boolean @default(true)
+  // Registration / approval
+  registrationNote  String? @db.Text    // Company's note when registering
+  businessRegNumber String? @db.VarChar(100) // 法人番号 (Japan) / registration number
+  rejectionReason   String? @db.Text    // Set by agent when rejecting
+  approvedAt        DateTime?
+  approvedByAgentId Int?                // Agent.id who approved
+
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   agentCompanies AgentCompany[]
   jobs           Job[]
 
+  @@index([companyCode])
+  @@index([status])
   @@index([name])
   @@map("companies")
 }
 
 // ─────────────────────────────────────────────────────────────
-// AGENT
+// AGENT  (role = AGENT — created by Admin only)
+// BUSINESS IDENTIFIER: agent_code = A0000001
 // ─────────────────────────────────────────────────────────────
 
 model Agent {
-  id   Int    @id @default(autoincrement())
-  code String @unique @default("") @db.VarChar(12) // A0000001
+  id        Int    @id @default(autoincrement())
+  agentCode String @unique @default("") @db.VarChar(12) // A0000001 — auto-set after insert
 
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -379,22 +404,22 @@ model Agent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   agentCompanies AgentCompany[]
   conversations  Conversation[]
 
+  @@index([agentCode])
   @@map("agents")
 }
 
 // Agent ↔ Company (many-to-many)
 model AgentCompany {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   agentId   Int
   companyId Int
-  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  agent     Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  isPrimary Boolean  @default(false)
+  isPrimary  Boolean  @default(false)
   assignedAt DateTime @default(now())
 
   @@unique([agentId, companyId])
@@ -402,61 +427,79 @@ model AgentCompany {
 }
 
 // ─────────────────────────────────────────────────────────────
+// ADMIN  (role = ADMIN — created via seed or by super admin)
+// BUSINESS IDENTIFIER: admin_code = admin1, admin2, ...
+// ─────────────────────────────────────────────────────────────
+
+model Admin {
+  id        Int    @id @default(autoincrement())
+  adminCode String @unique @default("") @db.VarChar(20) // admin1, admin2 — auto-set after insert
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  displayName  String  @db.VarChar(200)
+  isSuperAdmin Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([adminCode])
+  @@map("admins")
+}
+
+// ─────────────────────────────────────────────────────────────
 // JOB
+// BUSINESS IDENTIFIER: job_code = J0000001
 // ─────────────────────────────────────────────────────────────
 
 model Job {
-  id   Int    @id @default(autoincrement())
-  code String @unique @default("") @db.VarChar(12) // J0000001
+  id      Int    @id @default(autoincrement())
+  jobCode String @unique @default("") @db.VarChar(12) // J0000001 — auto-set after insert
 
   companyId Int
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  title       String  @db.VarChar(300)
-  description String  @db.LongText
+  title        String  @db.VarChar(300)
+  description  String  @db.LongText
   requirements String? @db.Text
-  benefits    String? @db.Text
+  benefits     String? @db.Text
 
   jobType      JobType      @default(FULL_TIME)
   workLocation WorkLocation @default(ONSITE)
   status       JobStatus    @default(DRAFT)
 
-  // Location
   country    String? @db.VarChar(100)
   prefecture String? @db.VarChar(100)
   city       String? @db.VarChar(100)
 
-  // Salary
   salaryType     SalaryType @default(ANNUAL)
-  salaryMin      Int?       // unit depends on salaryType: 円/時 | 万円/月 | 万円/年
+  salaryMin      Int?
   salaryMax      Int?
   salaryCurrency String     @default("JPY") @db.VarChar(10)
 
-  // Requirements
-  japaneseLevel    JapaneseLevel @default(NONE)
-  visaSponsorship  Boolean       @default(false)
-  minExperience    Int?          // years
-  skills           String?       @db.Text // JSON array
+  japaneseLevel   JapaneseLevel @default(NONE)
+  visaSponsorship Boolean       @default(false)
+  minExperience   Int?
+  skills          String?       @db.Text // JSON array
 
-  // Meta
-  viewCount    Int @default(0)
-  applyCount   Int @default(0)
+  viewCount  Int @default(0)
+  applyCount Int @default(0)
 
-  // Approval workflow
-  createdByRole   String    @default("COMPANY") @db.VarChar(20) // 'COMPANY' | 'AGENT'
-  createdById     Int       // userId who created
+  createdByRole   String    @default("COMPANY") @db.VarChar(20)
+  createdById     Int
   rejectionReason String?   @db.Text
   reviewedAt      DateTime?
-  reviewedById    Int?      // agentId who reviewed
+  reviewedById    Int?
 
   publishedAt DateTime?
   closesAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Relations
   applications Application[]
 
+  @@index([jobCode])
   @@index([status])
   @@index([jobType])
   @@index([workLocation])
@@ -468,33 +511,33 @@ model Job {
 
 // ─────────────────────────────────────────────────────────────
 // APPLICATION
+// BUSINESS IDENTIFIER: app_code = APP0000001
 // ─────────────────────────────────────────────────────────────
 
 model Application {
-  id   Int    @id @default(autoincrement())
-  code String @unique @default("") @db.VarChar(14) // APP0000001
+  id      Int    @id @default(autoincrement())
+  appCode String @unique @default("") @db.VarChar(14) // APP0000001 — auto-set after insert
 
   userId Int
   jobId  Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  status    ApplicationStatus @default(PENDING)
-  coverLetter String?         @db.Text
-  resumeSnapshot String?      @db.LongText // JSON snapshot of resume at apply time
+  status          ApplicationStatus @default(PENDING)
+  coverLetter     String?           @db.Text
+  resumeSnapshot  String?           @db.LongText // JSON snapshot at apply time
 
-  // Tracking
-  agentNote  String? @db.Text
+  agentNote       String? @db.Text
   rejectionReason String? @db.Text
 
-  appliedAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  appliedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
   statusHistory ApplicationStatusHistory[]
   conversation  Conversation?
 
   @@unique([userId, jobId])
+  @@index([appCode])
   @@index([status])
   @@index([userId])
   @@index([jobId])
@@ -508,8 +551,8 @@ model ApplicationStatusHistory {
 
   fromStatus ApplicationStatus?
   toStatus   ApplicationStatus
-  note       String?          @db.Text
-  changedBy  Int?             // userId who changed status
+  note       String?           @db.Text
+  changedBy  Int?
 
   createdAt DateTime @default(now())
 
@@ -524,17 +567,14 @@ model Conversation {
   id   Int              @id @default(autoincrement())
   type ConversationType
 
-  // Application context (required for APPLICATION_* types)
   applicationId Int?         @unique
   application   Application? @relation(fields: [applicationId], references: [id])
 
-  // Participants (nullable — only the relevant ones are set per type)
   agentId     Int?
-  agent       Agent?   @relation(fields: [agentId], references: [id])
-  candidateId Int?     // userId of candidate
-  companyId   Int?     // companyId
+  agent       Agent?  @relation(fields: [agentId], references: [id])
+  candidateId Int?    // userId of candidate
+  companyId   Int?    // Company.id
 
-  // CANDIDATE_COMPANY gate
   agentEnabled Boolean @default(false)
 
   isActive  Boolean  @default(true)
@@ -562,9 +602,9 @@ model Message {
   content String      @db.Text
   fileUrl String?     @db.VarChar(500)
 
-  isRead    Boolean  @default(false)
+  isRead    Boolean   @default(false)
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([conversationId])
   @@index([senderId])
@@ -580,12 +620,12 @@ model Notification {
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type    NotificationType
-  title   String           @db.VarChar(300)
-  body    String           @db.Text
-  data    String?          @db.Text // JSON payload
-  isRead  Boolean          @default(false)
-  readAt  DateTime?
+  type   NotificationType
+  title  String           @db.VarChar(300)
+  body   String           @db.Text
+  data   String?          @db.Text // JSON payload
+  isRead Boolean          @default(false)
+  readAt DateTime?
 
   createdAt DateTime @default(now())
 

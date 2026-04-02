@@ -20,10 +20,10 @@ export class ResumeService {
   // ── Get resume ─────────────────────────────────────────────
 
   async getMyResume(userId: number) {
-    const profile = await this.getProfileOrThrow(userId);
+    const candidate = await this.getCandidateOrThrow(userId);
 
     const resume = await this.prisma.resume.findUnique({
-      where: { profileId: profile.id },
+      where: { candidateId: candidate.id },
       include: {
         educations: { orderBy: { sortOrder: 'asc' } },
         experiences: { orderBy: { sortOrder: 'asc' } },
@@ -35,7 +35,7 @@ export class ResumeService {
     if (!resume) {
       // Auto-create empty resume on first access
       return this.prisma.resume.create({
-        data: { profileId: profile.id },
+        data: { candidateId: candidate.id },
         include: {
           educations: true,
           experiences: true,
@@ -230,26 +230,26 @@ export class ResumeService {
 
   // ── Private helpers ────────────────────────────────────────
 
-  private async getProfileOrThrow(userId: number) {
-    const profile = await this.prisma.profile.findUnique({ where: { userId } });
+  private async getCandidateOrThrow(userId: number) {
+    const candidate = await this.prisma.candidate.findUnique({ where: { userId } });
     if (!profile) {
-      throw new NotFoundException({ code: 'PROFILE_NOT_FOUND', message: 'プロフィールが見つかりません。' });
+      throw new NotFoundException({ code: 'CANDIDATE_NOT_FOUND', message: '候補者プロフィールが見つかりません。' });
     }
-    return profile;
+    return candidate;
   }
 
   private async getResumeOrCreate(userId: number) {
-    const profile = await this.getProfileOrThrow(userId);
-    let resume = await this.prisma.resume.findUnique({ where: { profileId: profile.id } });
+    const candidate = await this.getCandidateOrThrow(userId);
+    let resume = await this.prisma.resume.findUnique({ where: { candidateId: candidate.id } });
     if (!resume) {
-      resume = await this.prisma.resume.create({ data: { profileId: profile.id } });
+      resume = await this.prisma.resume.create({ data: { candidateId: candidate.id } });
     }
     return resume;
   }
 
   private async getResumeOrThrow(userId: number) {
-    const profile = await this.getProfileOrThrow(userId);
-    const resume = await this.prisma.resume.findUnique({ where: { profileId: profile.id } });
+    const candidate = await this.getCandidateOrThrow(userId);
+    const resume = await this.prisma.resume.findUnique({ where: { candidateId: candidate.id } });
     if (!resume) {
       throw new NotFoundException({ code: 'RESUME_NOT_FOUND', message: '職務経歴書が見つかりません。' });
     }

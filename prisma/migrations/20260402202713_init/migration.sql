@@ -1,7 +1,6 @@
 -- CreateTable
 CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(12) NOT NULL DEFAULT '',
     `email` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('CANDIDATE', 'AGENT', 'COMPANY', 'ADMIN') NOT NULL DEFAULT 'CANDIDATE',
@@ -11,7 +10,6 @@ CREATE TABLE `users` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `users_code_key`(`code`),
     UNIQUE INDEX `users_email_key`(`email`),
     INDEX `users_email_idx`(`email`),
     INDEX `users_role_idx`(`role`),
@@ -20,8 +18,9 @@ CREATE TABLE `users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `profiles` (
+CREATE TABLE `candidates` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userCode` VARCHAR(12) NOT NULL DEFAULT '',
     `userId` INTEGER NOT NULL,
     `firstName` VARCHAR(100) NOT NULL,
     `lastName` VARCHAR(100) NOT NULL,
@@ -56,14 +55,16 @@ CREATE TABLE `profiles` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `profiles_userId_key`(`userId`),
+    UNIQUE INDEX `candidates_userCode_key`(`userCode`),
+    UNIQUE INDEX `candidates_userId_key`(`userId`),
+    INDEX `candidates_userCode_idx`(`userCode`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `resumes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `profileId` INTEGER NOT NULL,
+    `candidateId` INTEGER NOT NULL,
     `title` VARCHAR(200) NOT NULL DEFAULT 'My Resume',
     `isPublic` BOOLEAN NOT NULL DEFAULT false,
     `pdfUrl` VARCHAR(500) NULL,
@@ -71,7 +72,7 @@ CREATE TABLE `resumes` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `resumes_profileId_key`(`profileId`),
+    UNIQUE INDEX `resumes_candidateId_key`(`candidateId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -144,7 +145,8 @@ CREATE TABLE `qualifications` (
 -- CreateTable
 CREATE TABLE `companies` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(12) NOT NULL DEFAULT '',
+    `companyCode` VARCHAR(12) NOT NULL DEFAULT '',
+    `status` ENUM('PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'SUSPENDED') NOT NULL DEFAULT 'PENDING_APPROVAL',
     `userId` INTEGER NOT NULL,
     `name` VARCHAR(200) NOT NULL,
     `nameKana` VARCHAR(200) NULL,
@@ -159,13 +161,19 @@ CREATE TABLE `companies` (
     `prefecture` VARCHAR(100) NULL,
     `city` VARCHAR(100) NULL,
     `address` TEXT NULL,
-    `isVerified` BOOLEAN NOT NULL DEFAULT false,
+    `registrationNote` TEXT NULL,
+    `businessRegNumber` VARCHAR(100) NULL,
+    `rejectionReason` TEXT NULL,
+    `approvedAt` DATETIME(3) NULL,
+    `approvedByAgentId` INTEGER NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `companies_code_key`(`code`),
+    UNIQUE INDEX `companies_companyCode_key`(`companyCode`),
     UNIQUE INDEX `companies_userId_key`(`userId`),
+    INDEX `companies_companyCode_idx`(`companyCode`),
+    INDEX `companies_status_idx`(`status`),
     INDEX `companies_name_idx`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -173,7 +181,7 @@ CREATE TABLE `companies` (
 -- CreateTable
 CREATE TABLE `agents` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(12) NOT NULL DEFAULT '',
+    `agentCode` VARCHAR(12) NOT NULL DEFAULT '',
     `userId` INTEGER NOT NULL,
     `displayName` VARCHAR(200) NOT NULL,
     `bio` TEXT NULL,
@@ -183,8 +191,9 @@ CREATE TABLE `agents` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `agents_code_key`(`code`),
+    UNIQUE INDEX `agents_agentCode_key`(`agentCode`),
     UNIQUE INDEX `agents_userId_key`(`userId`),
+    INDEX `agents_agentCode_idx`(`agentCode`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -201,9 +210,25 @@ CREATE TABLE `agent_companies` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `admins` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `adminCode` VARCHAR(20) NOT NULL DEFAULT '',
+    `userId` INTEGER NOT NULL,
+    `displayName` VARCHAR(200) NOT NULL,
+    `isSuperAdmin` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `admins_adminCode_key`(`adminCode`),
+    UNIQUE INDEX `admins_userId_key`(`userId`),
+    INDEX `admins_adminCode_idx`(`adminCode`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `jobs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(12) NOT NULL DEFAULT '',
+    `jobCode` VARCHAR(12) NOT NULL DEFAULT '',
     `companyId` INTEGER NOT NULL,
     `title` VARCHAR(300) NOT NULL,
     `description` LONGTEXT NOT NULL,
@@ -235,7 +260,8 @@ CREATE TABLE `jobs` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `jobs_code_key`(`code`),
+    UNIQUE INDEX `jobs_jobCode_key`(`jobCode`),
+    INDEX `jobs_jobCode_idx`(`jobCode`),
     INDEX `jobs_status_idx`(`status`),
     INDEX `jobs_jobType_idx`(`jobType`),
     INDEX `jobs_workLocation_idx`(`workLocation`),
@@ -248,7 +274,7 @@ CREATE TABLE `jobs` (
 -- CreateTable
 CREATE TABLE `applications` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `code` VARCHAR(14) NOT NULL DEFAULT '',
+    `appCode` VARCHAR(14) NOT NULL DEFAULT '',
     `userId` INTEGER NOT NULL,
     `jobId` INTEGER NOT NULL,
     `status` ENUM('PENDING', 'CASUAL_INTERVIEW', 'SCREENING', 'FIRST_INTERVIEW', 'SECOND_INTERVIEW', 'THIRD_INTERVIEW', 'FINAL_INTERVIEW', 'OFFER', 'ACCEPTED', 'REJECTED', 'WITHDRAWN') NOT NULL DEFAULT 'PENDING',
@@ -259,7 +285,8 @@ CREATE TABLE `applications` (
     `appliedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `applications_code_key`(`code`),
+    UNIQUE INDEX `applications_appCode_key`(`appCode`),
+    INDEX `applications_appCode_idx`(`appCode`),
     INDEX `applications_status_idx`(`status`),
     INDEX `applications_userId_idx`(`userId`),
     INDEX `applications_jobId_idx`(`jobId`),
@@ -322,7 +349,7 @@ CREATE TABLE `messages` (
 CREATE TABLE `notifications` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
-    `type` ENUM('APPLICATION_SUBMITTED', 'APPLICATION_STATUS_CHANGED', 'NEW_MESSAGE', 'NEW_JOB_MATCH', 'INTERVIEW_SCHEDULED', 'OFFER_RECEIVED', 'SYSTEM') NOT NULL,
+    `type` ENUM('APPLICATION_SUBMITTED', 'APPLICATION_STATUS_CHANGED', 'NEW_MESSAGE', 'NEW_JOB_MATCH', 'INTERVIEW_SCHEDULED', 'OFFER_RECEIVED', 'COMPANY_REGISTRATION', 'COMPANY_APPROVED', 'COMPANY_REJECTED', 'SYSTEM') NOT NULL,
     `title` VARCHAR(300) NOT NULL,
     `body` TEXT NOT NULL,
     `data` TEXT NULL,
@@ -348,10 +375,10 @@ CREATE TABLE `refresh_tokens` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `profiles` ADD CONSTRAINT `profiles_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `candidates` ADD CONSTRAINT `candidates_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `resumes` ADD CONSTRAINT `resumes_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `profiles`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `resumes` ADD CONSTRAINT `resumes_candidateId_fkey` FOREIGN KEY (`candidateId`) REFERENCES `candidates`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `educations` ADD CONSTRAINT `educations_resumeId_fkey` FOREIGN KEY (`resumeId`) REFERENCES `resumes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -376,6 +403,9 @@ ALTER TABLE `agent_companies` ADD CONSTRAINT `agent_companies_agentId_fkey` FORE
 
 -- AddForeignKey
 ALTER TABLE `agent_companies` ADD CONSTRAINT `agent_companies_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `companies`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `admins` ADD CONSTRAINT `admins_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `jobs` ADD CONSTRAINT `jobs_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `companies`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
