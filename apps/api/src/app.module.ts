@@ -4,6 +4,9 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import configuration, { configValidationSchema } from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
+import { ResumeModule } from './modules/resume/resume.module';
+import { JobModule } from './modules/job/job.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -19,6 +22,9 @@ import { RolesGuard } from './common/guards/roles.guard';
     }),
     PrismaModule,
     AuthModule,
+    UserModule,
+    ResumeModule,
+    JobModule,
   ],
   providers: [
     // Global exception filter
