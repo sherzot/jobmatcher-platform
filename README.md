@@ -114,12 +114,14 @@ cd apps/api && npm run start:dev  # http://localhost:3001
 
 ### Demo accounts (after seed)
 
-| Role | Email | Password | Dashboard |
-|---|---|---|---|
-| Admin | `admin@jobmatch.com` | `Admin@123456` | `/admin/dashboard` |
-| Agent | `agent@jobmatch.com` | `Agent@123456` | `/agent/dashboard` |
-| Company | `company@jobmatch.com` | `Company@123456` | `/company/dashboard` |
-| Candidate | `user@jobmatch.com` | `User@123456` | `/dashboard` |
+| Role | Email | Dashboard |
+|---|---|---|
+| Admin | `admin@jobmatch.com` | `/admin/dashboard` |
+| Agent | `agent@jobmatch.com` | `/agent/dashboard` |
+| Company | `company@jobmatch.com` | `/company/dashboard` |
+| Candidate | `user@jobmatch.com` | `/dashboard` |
+
+> Passwords are defined in `prisma/seed.ts` — check that file locally.
 
 ---
 
@@ -239,11 +241,11 @@ Every status change triggers: email + in-app notification + chatbot message *(no
 
 ```env
 # Database
-DATABASE_URL="mysql://jobmatch:jobmatch123@localhost:3307/jobmatcher_db"
+DATABASE_URL="mysql://<user>:<password>@localhost:3307/jobmatcher_db"
 
-# JWT
-JWT_ACCESS_SECRET=your_access_secret_here
-JWT_REFRESH_SECRET=your_refresh_secret_here
+# JWT — use strong random secrets (min 32 chars)
+JWT_ACCESS_SECRET=<random_secret>
+JWT_REFRESH_SECRET=<random_secret>
 JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
@@ -252,8 +254,8 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # MinIO / S3
-MINIO_ROOT_USER=jobmatch
-MINIO_ROOT_PASSWORD=jobmatch123
+MINIO_ROOT_USER=<user>
+MINIO_ROOT_PASSWORD=<password>
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9001
 
@@ -261,8 +263,10 @@ MINIO_PORT=9001
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
 # AI Service (planned)
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=<your_openai_key>
 ```
+
+> Copy `.env.example` and fill in your own values. Never commit `.env` to git.
 
 ---
 

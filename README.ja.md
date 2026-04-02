@@ -115,10 +115,12 @@ cd apps/api && npm run start:dev  # http://localhost:3001
 
 | ロール | メール | パスワード | ダッシュボード |
 |---|---|---|---|
-| 管理者 | `admin@jobmatch.com` | `Admin@123456` | `/admin/dashboard` |
-| エージェント | `agent@jobmatch.com` | `Agent@123456` | `/agent/dashboard` |
-| 企業 | `company@jobmatch.com` | `Company@123456` | `/company/dashboard` |
-| 候補者 | `user@jobmatch.com` | `User@123456` | `/dashboard` |
+| 管理者 | `admin@jobmatch.com` | `/admin/dashboard` |
+| エージェント | `agent@jobmatch.com` | `/agent/dashboard` |
+| 企業 | `company@jobmatch.com` | `/company/dashboard` |
+| 候補者 | `user@jobmatch.com` | `/dashboard` |
+
+> パスワードは `prisma/seed.ts` に定義されています。ローカルでご確認ください。
 
 ---
 
