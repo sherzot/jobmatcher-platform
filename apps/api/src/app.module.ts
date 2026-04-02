@@ -1,10 +1,34 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import configuration, { configValidationSchema } from './config/configuration';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+      validationSchema: configValidationSchema,
+      validationOptions: { abortEarly: false },
+    }),
+    PrismaModule,
+    AuthModule,
+  ],
+  providers: [
+    // Global exception filter
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    // Global response wrapper
+    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
+    // JWT auth applied globally — use @Public() to skip
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    // RBAC guard — use @Roles() to restrict
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

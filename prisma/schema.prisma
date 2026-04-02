@@ -4,7 +4,8 @@
 // ─────────────────────────────────────────────────────────────
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -32,10 +33,18 @@ enum UserStatus {
 
 enum JobStatus {
   DRAFT
+  PENDING_REVIEW  // Company submitted, waiting agent approval (アルバイト jobs only)
   ACTIVE
   PAUSED
   CLOSED
+  REJECTED        // Agent rejected — company must revise
   DELETED
+}
+
+enum SalaryType {
+  HOURLY    // 時給 — always requires agent review
+  MONTHLY   // 月給 — requires review if jobType = PART_TIME
+  ANNUAL    // 年収 — never requires review
 }
 
 enum JobType {
@@ -84,6 +93,15 @@ enum JapaneseLevel {
   NONE
 }
 
+enum ConversationType {
+  APPLICATION_AGENT_CANDIDATE    // Agent ↔ Candidate about a specific application
+  APPLICATION_AGENT_COMPANY      // Agent ↔ Company about a specific candidate
+  APPLICATION_CANDIDATE_COMPANY  // Direct (agent-enabled only)
+  GENERAL_AGENT_CANDIDATE        // General — not tied to a specific job
+  GENERAL_AGENT_COMPANY          // General — not tied to a specific job
+  ADMIN_SUPPORT                  // Admin ↔ any role
+}
+
 enum MessageType {
   TEXT
   FILE
@@ -120,6 +138,7 @@ model User {
   // Relations
   profile       Profile?
   agent         Agent?
+  company       Company?
   applications  Application[]
   sentMessages  Message[]        @relation("SentMessages")
   notifications Notification[]
@@ -305,6 +324,10 @@ model Company {
   id   Int    @id @default(autoincrement())
   code String @unique @default("") @db.VarChar(12) // C0000001
 
+  // Linked user account (role = COMPANY)
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   name          String  @db.VarChar(200)
   nameKana      String? @db.VarChar(200)
   nameEn        String? @db.VarChar(200)
@@ -404,9 +427,10 @@ model Job {
   city       String? @db.VarChar(100)
 
   // Salary
-  salaryMin Int?
-  salaryMax Int?
-  salaryCurrency String @default("JPY") @db.VarChar(10)
+  salaryType     SalaryType @default(ANNUAL)
+  salaryMin      Int?       // unit depends on salaryType: 円/時 | 万円/月 | 万円/年
+  salaryMax      Int?
+  salaryCurrency String     @default("JPY") @db.VarChar(10)
 
   // Requirements
   japaneseLevel    JapaneseLevel @default(NONE)
@@ -417,6 +441,13 @@ model Job {
   // Meta
   viewCount    Int @default(0)
   applyCount   Int @default(0)
+
+  // Approval workflow
+  createdByRole   String    @default("COMPANY") @db.VarChar(20) // 'COMPANY' | 'AGENT'
+  createdById     Int       // userId who created
+  rejectionReason String?   @db.Text
+  reviewedAt      DateTime?
+  reviewedById    Int?      // agentId who reviewed
 
   publishedAt DateTime?
   closesAt    DateTime?
@@ -490,12 +521,21 @@ model ApplicationStatusHistory {
 // ─────────────────────────────────────────────────────────────
 
 model Conversation {
-  id Int @id @default(autoincrement())
+  id   Int              @id @default(autoincrement())
+  type ConversationType
 
+  // Application context (required for APPLICATION_* types)
   applicationId Int?         @unique
   application   Application? @relation(fields: [applicationId], references: [id])
-  agentId       Int
-  agent         Agent        @relation(fields: [agentId], references: [id])
+
+  // Participants (nullable — only the relevant ones are set per type)
+  agentId     Int?
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+  candidateId Int?     // userId of candidate
+  companyId   Int?     // companyId
+
+  // CANDIDATE_COMPANY gate
+  agentEnabled Boolean @default(false)
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -503,6 +543,10 @@ model Conversation {
 
   messages Message[]
 
+  @@index([applicationId])
+  @@index([agentId])
+  @@index([candidateId])
+  @@index([companyId])
   @@map("conversations")
 }
 
