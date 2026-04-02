@@ -1,18 +1,18 @@
 import { ChatLayout } from '@/components/chat/ChatLayout';
 import { getConversationsForRole } from '@/lib/mock/chat';
 
-// Current user is company TechStart (c1)
-const CURRENT_USER_ID = 'c1';
+// Current agent is Tanaka (ag1)
+const CURRENT_USER_ID = 'ag1';
 
-export default function CompanyMessagesPage() {
-  const conversations = getConversationsForRole('COMPANY', CURRENT_USER_ID);
+export default function AgentMessagesPage() {
+  const conversations = getConversationsForRole('AGENT', CURRENT_USER_ID);
 
   return (
     <div className="flex h-full flex-col">
       <ChatLayout
         conversations={conversations}
         currentUserId={CURRENT_USER_ID}
-        currentUserRole="COMPANY"
+        currentUserRole="AGENT"
       />
     </div>
   );
