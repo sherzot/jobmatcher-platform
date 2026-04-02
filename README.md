@@ -111,9 +111,30 @@ cd apps/api && npm run dev   # http://localhost:3001
 | `/profile` | 基本情報 edit — 氏名, 居住地, 言語/ビザ, 希望条件, 志望動機 |
 | `/resume` | 履歴書・職務経歴書 CRUD — 学歴 max 3, 経歴 max 10, スキル/資格 unlimited |
 
+### ✅ Phase 2 — Agent Dashboard Prototype (mock data)
+
+| Route | Description |
+|---|---|
+| `/agent/dashboard` | Overview — stats, active jobs, candidates in progress, companies |
+| `/agent/companies` | Company CRUD with modal (create / edit / toggle active) |
+| `/agent/jobs` | Job list with status badges + start/stop/publish actions |
+| `/agent/jobs/new` | **2-step:** select company first → then fill job form (no company = no job) |
+| `/agent/jobs/[id]` | Job detail + candidates list (match score, status, actions) |
+| `/agent/candidates` | Full candidate list with filters (status, job, search) + match score |
+
+### ✅ Phase 3 — Company Dashboard Prototype (mock data)
+
+| Route | Description |
+|---|---|
+| `/company/dashboard` | Overview — stats, job list, agent card, recent applications |
+| `/company/jobs` | Own job list with **start / stop** controls (agent creates jobs, company controls them) |
+| `/company/jobs/[id]` | Job detail + applicant list (read-only, agent contact button) |
+| `/company/messages` | Real-time chat UI with assigned agent |
+| `/company/profile` | Company info edit — name, industry, location, description |
+
 ### 🔄 In Progress
 
-- [ ] Agent dashboard prototype (company CRUD, job management, candidate list)
+- [ ] Admin dashboard prototype
 
 ### 📋 Roadmap
 
