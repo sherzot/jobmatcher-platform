@@ -1,0 +1,567 @@
+// ─────────────────────────────────────────────────────────────
+// JobMatch Platform — Prisma Schema
+// MySQL 8.0 | Prisma 5.x
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CANDIDATE
+  AGENT
+  COMPANY
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+  DELETED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+enum WorkLocation {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+enum ApplicationStatus {
+  PENDING
+  CASUAL_INTERVIEW
+  SCREENING
+  FIRST_INTERVIEW
+  SECOND_INTERVIEW
+  THIRD_INTERVIEW
+  FINAL_INTERVIEW
+  OFFER
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum VisaStatus {
+  NOT_REQUIRED
+  SPONSORED
+  SELF_SPONSORED
+  ALREADY_HAVE
+}
+
+enum JapaneseLevel {
+  N1
+  N2
+  N3
+  N4
+  N5
+  BUSINESS
+  NATIVE
+  NONE
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  SYSTEM
+}
+
+enum NotificationType {
+  APPLICATION_SUBMITTED
+  APPLICATION_STATUS_CHANGED
+  NEW_MESSAGE
+  NEW_JOB_MATCH
+  INTERVIEW_SCHEDULED
+  OFFER_RECEIVED
+  SYSTEM
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id        Int        @id @default(autoincrement())
+  code      String     @unique @default("") @db.VarChar(12) // U0000001
+  email     String     @unique @db.VarChar(255)
+  password  String     @db.VarChar(255)
+  role      UserRole   @default(CANDIDATE)
+  status    UserStatus @default(PENDING_VERIFICATION)
+
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  profile       Profile?
+  agent         Agent?
+  applications  Application[]
+  sentMessages  Message[]        @relation("SentMessages")
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PROFILE (Candidate 基本情報)
+// ─────────────────────────────────────────────────────────────
+
+model Profile {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 基本情報
+  firstName      String  @db.VarChar(100)
+  lastName       String  @db.VarChar(100)
+  firstNameKana  String? @db.VarChar(100) // フリガナ
+  lastNameKana   String? @db.VarChar(100)
+  dateOfBirth    DateTime?
+  gender         String? @db.VarChar(20)
+  phone          String? @db.VarChar(20)
+  avatarUrl      String? @db.VarChar(500)
+
+  // Location
+  country        String? @db.VarChar(100)
+  prefecture     String? @db.VarChar(100) // 都道府県
+  city           String? @db.VarChar(100)
+  address        String? @db.Text
+
+  // Work preferences 希望条件
+  desiredJobTypes  String? @db.Text // JSON array
+  desiredLocations String? @db.Text // JSON array
+  desiredSalaryMin Int?
+  desiredSalaryMax Int?
+  availableFrom    DateTime?
+  isOpenToWork     Boolean @default(true)
+
+  // Language
+  japaneseLevel  JapaneseLevel @default(NONE)
+  englishLevel   String?       @db.VarChar(50)
+  otherLanguages String?       @db.Text // JSON array
+
+  // Visa
+  nationality    String?    @db.VarChar(100)
+  visaStatus     VisaStatus @default(NOT_REQUIRED)
+  visaExpiry     DateTime?
+
+  // Career summary
+  yearsOfExperience Int?
+  currentSalary     Int?
+  selfIntroduction  String? @db.Text // 自己紹介
+
+  // Motivation & Strengths
+  motivation String? @db.Text // 志望動機
+  approach   String? @db.Text // 取り組み方
+  strengths  String? @db.Text // 強み
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  resume Resume?
+
+  @@map("profiles")
+}
+
+// ─────────────────────────────────────────────────────────────
+// RESUME (履歴書・職務経歴書)
+// ─────────────────────────────────────────────────────────────
+
+model Resume {
+  id        Int     @id @default(autoincrement())
+  profileId Int     @unique
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title        String  @default("My Resume") @db.VarChar(200)
+  isPublic     Boolean @default(false)
+  pdfUrl       String? @db.VarChar(500) // generated PDF
+  uploadedPdfUrl String? @db.VarChar(500) // original uploaded PDF
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  educations    Education[]
+  experiences   Experience[]
+  skills        Skill[]
+  qualifications Qualification[]
+
+  @@map("resumes")
+}
+
+// 学歴 (max 3)
+model Education {
+  id       Int    @id @default(autoincrement())
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  schoolName   String  @db.VarChar(200) // 学校名
+  faculty      String? @db.VarChar(200) // 学部・学科
+  degree       String? @db.VarChar(100) // 学位
+  startDate    String  @db.VarChar(20)  // YYYY年MM月
+  endDate      String? @db.VarChar(20)  // YYYY年MM月 or null (在学中)
+  isGraduated  Boolean @default(true)
+  description  String? @db.Text
+  sortOrder    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("educations")
+}
+
+// 経歴 (max 10)
+model Experience {
+  id       Int    @id @default(autoincrement())
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  companyName  String  @db.VarChar(200) // 会社名
+  position     String  @db.VarChar(200) // 役職・職種
+  employeeCount String? @db.VarChar(50) // 従業員数
+  startDate    String  @db.VarChar(20)  // YYYY年MM月
+  endDate      String? @db.VarChar(20)  // null = 現職
+  isCurrent    Boolean @default(false)
+  description  String? @db.Text         // 業務内容
+  achievements String? @db.Text         // 実績
+  sortOrder    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("experiences")
+}
+
+// スキル (unlimited)
+model Skill {
+  id       Int    @id @default(autoincrement())
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  name      String @db.VarChar(100)
+  level     String? @db.VarChar(50) // beginner / intermediate / advanced / expert
+  yearsUsed Int?
+  sortOrder Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("skills")
+}
+
+// 資格 (unlimited)
+model Qualification {
+  id       Int    @id @default(autoincrement())
+  resumeId Int
+  resume   Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  name        String  @db.VarChar(200)  // 資格名
+  issuedBy    String? @db.VarChar(200)  // 発行機関
+  issuedDate  String? @db.VarChar(20)   // YYYY年MM月
+  expiryDate  String? @db.VarChar(20)
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("qualifications")
+}
+
+// ─────────────────────────────────────────────────────────────
+// COMPANY
+// ─────────────────────────────────────────────────────────────
+
+model Company {
+  id   Int    @id @default(autoincrement())
+  code String @unique @default("") @db.VarChar(12) // C0000001
+
+  name          String  @db.VarChar(200)
+  nameKana      String? @db.VarChar(200)
+  nameEn        String? @db.VarChar(200)
+  logoUrl       String? @db.VarChar(500)
+  websiteUrl    String? @db.VarChar(500)
+  description   String? @db.Text
+  industry      String? @db.VarChar(100)
+  employeeCount String? @db.VarChar(50) // e.g. "50-100"
+  founded       Int?    // year
+
+  // Location
+  country    String? @db.VarChar(100)
+  prefecture String? @db.VarChar(100)
+  city       String? @db.VarChar(100)
+  address    String? @db.Text
+
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  agentCompanies AgentCompany[]
+  jobs           Job[]
+
+  @@index([name])
+  @@map("companies")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENT
+// ─────────────────────────────────────────────────────────────
+
+model Agent {
+  id   Int    @id @default(autoincrement())
+  code String @unique @default("") @db.VarChar(12) // A0000001
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  displayName String  @db.VarChar(200)
+  bio         String? @db.Text
+  avatarUrl   String? @db.VarChar(500)
+  phone       String? @db.VarChar(20)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  agentCompanies AgentCompany[]
+  conversations  Conversation[]
+
+  @@map("agents")
+}
+
+// Agent ↔ Company (many-to-many)
+model AgentCompany {
+  id        Int      @id @default(autoincrement())
+  agentId   Int
+  companyId Int
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  isPrimary Boolean  @default(false)
+  assignedAt DateTime @default(now())
+
+  @@unique([agentId, companyId])
+  @@map("agent_companies")
+}
+
+// ─────────────────────────────────────────────────────────────
+// JOB
+// ─────────────────────────────────────────────────────────────
+
+model Job {
+  id   Int    @id @default(autoincrement())
+  code String @unique @default("") @db.VarChar(12) // J0000001
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title       String  @db.VarChar(300)
+  description String  @db.LongText
+  requirements String? @db.Text
+  benefits    String? @db.Text
+
+  jobType      JobType      @default(FULL_TIME)
+  workLocation WorkLocation @default(ONSITE)
+  status       JobStatus    @default(DRAFT)
+
+  // Location
+  country    String? @db.VarChar(100)
+  prefecture String? @db.VarChar(100)
+  city       String? @db.VarChar(100)
+
+  // Salary
+  salaryMin Int?
+  salaryMax Int?
+  salaryCurrency String @default("JPY") @db.VarChar(10)
+
+  // Requirements
+  japaneseLevel    JapaneseLevel @default(NONE)
+  visaSponsorship  Boolean       @default(false)
+  minExperience    Int?          // years
+  skills           String?       @db.Text // JSON array
+
+  // Meta
+  viewCount    Int @default(0)
+  applyCount   Int @default(0)
+
+  publishedAt DateTime?
+  closesAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  applications Application[]
+
+  @@index([status])
+  @@index([jobType])
+  @@index([workLocation])
+  @@index([prefecture])
+  @@index([japaneseLevel])
+  @@fulltext([title, description])
+  @@map("jobs")
+}
+
+// ─────────────────────────────────────────────────────────────
+// APPLICATION
+// ─────────────────────────────────────────────────────────────
+
+model Application {
+  id   Int    @id @default(autoincrement())
+  code String @unique @default("") @db.VarChar(14) // APP0000001
+
+  userId Int
+  jobId  Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  status    ApplicationStatus @default(PENDING)
+  coverLetter String?         @db.Text
+  resumeSnapshot String?      @db.LongText // JSON snapshot of resume at apply time
+
+  // Tracking
+  agentNote  String? @db.Text
+  rejectionReason String? @db.Text
+
+  appliedAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  statusHistory ApplicationStatusHistory[]
+  conversation  Conversation?
+
+  @@unique([userId, jobId])
+  @@index([status])
+  @@index([userId])
+  @@index([jobId])
+  @@map("applications")
+}
+
+model ApplicationStatusHistory {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  fromStatus ApplicationStatus?
+  toStatus   ApplicationStatus
+  note       String?          @db.Text
+  changedBy  Int?             // userId who changed status
+
+  createdAt DateTime @default(now())
+
+  @@map("application_status_history")
+}
+
+// ─────────────────────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────────────────────
+
+model Conversation {
+  id Int @id @default(autoincrement())
+
+  applicationId Int?         @unique
+  application   Application? @relation(fields: [applicationId], references: [id])
+  agentId       Int
+  agent         Agent        @relation(fields: [agentId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId Int
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+
+  type    MessageType @default(TEXT)
+  content String      @db.Text
+  fileUrl String?     @db.VarChar(500)
+
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  title   String           @db.VarChar(300)
+  body    String           @db.Text
+  data    String?          @db.Text // JSON payload
+  isRead  Boolean          @default(false)
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
