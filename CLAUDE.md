@@ -214,7 +214,7 @@ This is real operational AI — not marketing.
 
 | Module | Description |
 |---|---|
-| **Resume Parser** | PDF/image/text upload → OCR → extracts education, experience, skills. Supports Japanese 履歴書 structure. Uses OpenAI GPT-4o / Google Document AI. |
+| **Resume Parser** | PDF/image/text upload → OCR → extracts education, experience, skills. Supports Japanese 履歴書・職務経歴書 structure. Uses OpenAI GPT-4o / Google Document AI. |
 | **Job Description Parser** | Extracts structured fields from job postings: skill, level, language, visa, location, salary. |
 | **Matching Engine** | Rule-based + semantic hybrid. Hard filters (location, language, work permit) + soft score (skill similarity, experience, seniority). Explainable scoring output. |
 | **Recommendation Engine** | Identifies best vacancies, missing skills, and resume improvement areas. |
@@ -308,7 +308,7 @@ GET  /api/ai/assistant/guidance # AI guidance for candidate
 
 - [ ] AI resume parsing (PDF/DOCX → structured JSON via FastAPI)
 - [ ] AI job matching (rule-based + semantic hybrid, explainable score)
-- [ ] Japanese resume (履歴書) auto-generation + PDF download
+- [ ] Japanese resume (履歴書・職務経歴書) auto-generation + PDF download
 - [ ] Notifications (email + in-app on apply, status change)
 - [ ] Chat/messaging (User ↔ Agent, Company ↔ Agent via WebSocket)
 - [ ] Analytics (basic recruiter/job performance metrics)
@@ -321,7 +321,7 @@ GET  /api/ai/assistant/guidance # AI guidance for candidate
 - [ ] Recommendation engine (skill gap, career path)
 - [ ] Semantic search (vector DB integration)
 - [ ] Interview scheduling + offer management
-- [ ] Automated document generation (履歴書, offer letters)
+- [ ] Automated document generation (履歴書・職務経歴書, offer letters)
 - [ ] Cross-market: JP ↔ UZ, remote, relocation, visa support
 - [ ] Kubernetes deployment + ArgoCD + monitoring
 
