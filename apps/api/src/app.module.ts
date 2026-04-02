@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ResumeModule } from './modules/resume/resume.module';
 import { JobModule } from './modules/job/job.module';
+import { ApplicationModule } from './modules/application/application.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -25,6 +26,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     UserModule,
     ResumeModule,
     JobModule,
+    ApplicationModule,
   ],
   providers: [
     // Global exception filter
