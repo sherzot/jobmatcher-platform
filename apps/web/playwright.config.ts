@@ -15,20 +15,20 @@ export default defineConfig({
   webServer: process.env.CI
     ? {
         command:
-          "cd ../.. && (npm run start:prod -w apps/api > /tmp/jobmatcher-api.log 2>&1 &) && npm run start -- -p 3010",
+          "(npm run start:prod -w apps/api > /tmp/jobmatcher-api.log 2>&1 &) && npm run start -w apps/web -- -p 3010",
         url: "http://localhost:3010",
         timeout: 120_000,
         reuseExistingServer: false,
       }
     : [
         {
-          command: "cd ../.. && npm run start:dev -w apps/api",
+          command: "npm run start:dev -w apps/api",
           url: "http://localhost:3011/api/health",
           timeout: 120_000,
           reuseExistingServer: true,
         },
         {
-          command: "npm run dev -- -p 3010",
+          command: "npm run dev -w apps/web -- -p 3010",
           url: "http://localhost:3010",
           timeout: 120_000,
           reuseExistingServer: true,

@@ -80,6 +80,20 @@ Qoidalar:
 
 - O‘zgarishni commit/push qilish va CI E2E natijasini qayta tekshirish.
 
+## 2026-09-10 — CI E2E workspace command tuzatildi
+
+### Changed
+
+- Playwright webServer command’lari root katalogdan ham to‘g‘ri ishlashi uchun `npm run ... -w apps/api/apps/web` formatiga o‘tkazildi.
+
+### Verification
+
+- Remote run `34455856716` logida `npm run start` script’i topilmagani (`webServer` root cwd) tasdiqlandi.
+
+### Next
+
+- Tuzatishni commit/push qilish va CI E2E bosqichini qayta tekshirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
