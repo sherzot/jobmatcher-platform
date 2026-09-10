@@ -3,9 +3,9 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
+import { requestPath, resolveRequestId } from './common/http/request-metadata';
 
 async function bootstrap() {
   const configuredLevels = (process.env.LOG_LEVELS ?? 'error,warn,log')
@@ -33,16 +33,13 @@ async function bootstrap() {
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     const incoming = req.header('x-request-id');
-    const requestId =
-      incoming && /^[A-Za-z0-9._:-]{1,128}$/.test(incoming)
-        ? incoming
-        : randomUUID();
+    const requestId = resolveRequestId(incoming);
     res.setHeader('X-Request-ID', requestId);
     next();
   });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path === '/api/health') return next();
+    if (requestPath(req) === '/api/health') return next();
     const startedAt = Date.now();
     res.on('finish', () => {
       const requestId = String(res.getHeader('X-Request-ID') ?? 'unknown');
@@ -51,7 +48,7 @@ async function bootstrap() {
           event: 'http.request',
           requestId,
           method: req.method,
-          path: req.path,
+          path: requestPath(req),
           statusCode: res.statusCode,
           durationMs: Date.now() - startedAt,
         }),

@@ -8,7 +8,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { AuthCookieResponse } from '../../common/http/auth-cookie';
+import {
+  clearAuthCookie,
+  writeAuthCookie,
+} from '../../common/http/auth-cookie';
 import { AuthService } from './auth.service';
 import { RegisterCandidateDto } from './dto/register-candidate.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
@@ -63,15 +67,15 @@ export class AuthController {
   @ApiOperation({ summary: 'ログイン（全ロール共通）' })
   async login(
     @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: AuthCookieResponse,
   ) {
     const result = await this.authService.login(dto);
 
-    res.cookie('access_token', result.accessToken, {
+    writeAuthCookie(res, 'access_token', result.accessToken, {
       ...COOKIE_OPTIONS,
       maxAge: ACCESS_TOKEN_MAX_AGE,
     });
-    res.cookie('refresh_token', result.refreshToken, {
+    writeAuthCookie(res, 'refresh_token', result.refreshToken, {
       ...COOKIE_OPTIONS,
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
@@ -88,15 +92,15 @@ export class AuthController {
   @ApiOperation({ summary: 'アクセストークン更新' })
   async refresh(
     @CurrentUser() user: JwtPayload & { refreshToken: string },
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: AuthCookieResponse,
   ) {
     const tokens = await this.authService.refresh(user);
 
-    res.cookie('access_token', tokens.accessToken, {
+    writeAuthCookie(res, 'access_token', tokens.accessToken, {
       ...COOKIE_OPTIONS,
       maxAge: ACCESS_TOKEN_MAX_AGE,
     });
-    res.cookie('refresh_token', tokens.refreshToken, {
+    writeAuthCookie(res, 'refresh_token', tokens.refreshToken, {
       ...COOKIE_OPTIONS,
       maxAge: REFRESH_TOKEN_MAX_AGE,
     });
@@ -112,12 +116,12 @@ export class AuthController {
   @ApiOperation({ summary: 'ログアウト' })
   async logout(
     @CurrentUser() user: JwtPayload,
-    @Res({ passthrough: true }) res: Response,
+    @Res({ passthrough: true }) res: AuthCookieResponse,
   ) {
     await this.authService.logout(user.sub);
 
-    res.clearCookie('access_token', COOKIE_OPTIONS);
-    res.clearCookie('refresh_token', COOKIE_OPTIONS);
+    clearAuthCookie(res, 'access_token', COOKIE_OPTIONS);
+    clearAuthCookie(res, 'refresh_token', COOKIE_OPTIONS);
 
     return { message: 'ログアウトしました。' };
   }

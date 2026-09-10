@@ -170,6 +170,233 @@ Qoidalar:
 - `@fastify/cookie` 11.1.2 mavjudligi tasdiqlandi.
 - Production dependency graph’iga hali o‘zgartirish kiritilmadi.
 
+## 2026-09-10 — Auth cookie port ajratildi
+
+### Changed
+
+- `common/http/auth-cookie.ts` qo‘shildi: Express `cookie` va Fastify `setCookie` API’larini yagona port orqali qo‘llaydi.
+- `auth.controller.ts` to‘g‘ridan-to‘g‘ri Express `Response` tipiga bog‘lanishdan chiqarildi.
+- Express/Fastify cookie behavior uchun 3 ta unit test qo‘shildi.
+
+### Next
+
+- Request/response middleware va exception filter’ni xuddi shu adapter-neutral port yondashuviga o‘tkazish.
+
+## 2026-09-10 — Request metadata utility ajratildi
+
+### Changed
+
+- `common/http/request-metadata.ts` request ID sanitizatsiyasi/generatsiyasi va query’siz path normalization uchun qo‘shildi.
+- Utility Express yoki Fastify request obyektiga bog‘lanmagan.
+- 3 ta unit test qo‘shildi.
+
+### Next
+
+- Main middleware va exception filter’da ushbu utility’ni qo‘llash.
+
+## 2026-09-10 — Request metadata runtime’ga ulandi
+
+### Changed
+
+- `main.ts` request ID validation/generation va path normalization uchun `common/http/request-metadata` utility’sidan foydalanadi.
+- Health endpoint skip va access log path hisoblash bir xil helper orqali markazlashtirildi.
+
+### Verification
+
+- API testlar keyingi qadamda qayta ishga tushiriladi.
+
+## 2026-09-10 — Exception filter adapter-neutral qilindi
+
+### Changed
+
+- Global exception filter Express `Request/Response` importlaridan chiqarildi.
+- Minimal Nest HTTP request/response contract’lari va optional header access ishlatildi.
+- Request ID fallback endi response header, request header yoki `unknown` ketma-ketligida olinadi.
+
+### Next
+
+- API test/build va Fastify bootstrap spike’ini davom ettirish.
+
+## 2026-09-10 — Fastify bootstrap POC qo‘shildi
+
+### Changed
+
+- `apps/api/src/main.fastify.ts` alohida Fastify bootstrap entrypoint sifatida qo‘shildi.
+- `@fastify/cookie`, CORS va `api` global prefix POC’da yoqildi.
+- `start:fastify` script’i qo‘shildi; mavjud Express `main.ts` production entrypoint bo‘lib qoldi.
+
+### Verification
+
+- `npm run db:generate` — passed: Prisma Client v5.22.0 qayta generatsiya qilindi.
+- `npm run lint -w apps/api` — passed: adapter-neutral filter’dagi request ID normalizatsiyasi bilan lint xatosi yopildi.
+- `npm run test -w apps/api -- --runInBand` — passed: 23 suite, 95 test.
+- `npm run build -w apps/api` — passed: Express va Fastify entrypoint’lari TypeScript/Nest build’dan o‘tdi.
+
+### Next
+
+- Fastify bootstrap parity asoslarini runtime smoke test va security header tekshiruvi bilan davom ettirish.
+
+## 2026-09-10 — Fastify bootstrap parity asoslari
+
+### Changed
+
+- Fastify entrypoint’ga `ValidationPipe` qo‘shildi: whitelist, unknown-field rejection va transform Express bootstrap bilan bir xil qilindi.
+- Fastify `onRequest` hook’i `X-Request-ID` correlation header’ini yaratadi yoki saqlaydi.
+- Fastify `onResponse` hook’i health endpoint’dan tashqari request metadata’ni structured log qiladi.
+- Express `main.ts` production entrypoint sifatida o‘zgarishsiz qoldi; Fastify hali spike branch’da eksperimental.
+
+### Verification
+
+- `npm run db:generate` — passed.
+- `npm run build -w apps/api` — passed.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 23 suite, 95 test.
+- Runtime Fastify + real database E2E — not run; bu bosqich compile/unit parity bilan cheklangan.
+
+### Next
+
+- Fastify runtime smoke test’ini alohida test database bilan qo‘shish va security header parity’ni tekshirish.
+
+## 2026-09-10 — Fastify runtime smoke test
+
+### Changed
+
+- Fastify konfiguratsiyasi `fastify-bootstrap.ts` ga ajratildi; `main.fastify.ts` faqat composition va listen lifecycle’ni boshqaradi.
+- `/api/health` prefiksi va `X-Request-ID` propagation’ni tekshiruvchi Nest + Fastify smoke test qo‘shildi.
+- Jest CommonJS VM `@fastify/cookie` dynamic import’ini yuklay olmagani uchun smoke test cookie registration’ni ataylab chetlab o‘tadi; production bootstrap’da plugin yoqilgan.
+
+### Verification
+
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- Smoke test real database/Redis bilan emas, minimal Nest test module bilan bajarildi.
+
+## 2026-09-10 — Fastify cookie runtime harness
+
+### Changed
+
+- `apps/api/scripts/fastify-cookie-smoke.ts` qo‘shildi; minimal Nest module orqali Fastify adapter, `@fastify/cookie` va auth cookie response birgalikda tekshiriladi.
+- `test:fastify-runtime` workspace script’i qo‘shildi.
+- Harness real database/Redis’ga ulanmaydi, faqat transport va cookie serialization contract’ini tekshiradi.
+
+### Verification
+
+- `npm run test:fastify-runtime -w apps/api` — passed: `Fastify cookie smoke passed`.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- `git diff --check` — passed.
+
+## 2026-09-10 — Fastify security headers parity
+
+### Changed
+
+- `@fastify/helmet@13.1.1` qo‘shildi.
+- Fastify bootstrap Express’dagi `helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } })` sozlamasiga moslashtirildi.
+- Runtime harness `X-Content-Type-Options: nosniff` header’ini ham tekshiradi.
+
+### Verification
+
+- `npm run test:fastify-runtime -w apps/api` — passed: cookie va security header smoke tekshiruvi.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- `git diff --check` — passed.
+
+## 2026-09-10 — Fastify API contract smoke kengaytirildi
+
+### Changed
+
+- Runtime harness CORS origin header’ini (`access-control-allow-origin`) ham tekshiradi.
+- Cookie, security header, prefix va request lifecycle bitta Fastify contract smoke oqimida tekshiriladi.
+- DTO validation alohida full-AppModule/database integration bosqichiga qoldirildi; minimal harness’da decorator metadata runtime’ni noto‘g‘ri talqin qilmaslik uchun bu testga qo‘shilmadi.
+
+### Verification
+
+- `npm run test:fastify-runtime -w apps/api` — passed.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- `git diff --check` — passed.
+
+## 2026-09-10 — Fastify full AppModule E2E harness
+
+### Changed
+
+- `apps/api/test/fastify-app.e2e-spec.ts` qo‘shildi; haqiqiy `AppModule`, Fastify adapter, global guards/interceptor/filter va health contract’ni tekshiradi.
+- `test:e2e:fastify` script’i qo‘shildi.
+- Test alohida `DATABASE_URL` va Redis talab qiladi; regular unit suite’ga kiritilmadi.
+
+### Verification
+
+- `npm run lint -w apps/api` — passed.
+- `npm run build -w apps/api` — passed.
+- Full AppModule Fastify E2E — blocked/not run: lokal Docker’da MySQL/Redis container’lari ishlamayapti (`docker ps` bo‘sh).
+- `git diff --check` — passed.
+
+### Follow-up verification
+
+- `npm run docker:dev` — blocked: MySQL container `127.0.0.1:3307` port collision sabab start bo‘lmadi.
+- `npm run test:e2e:fastify -w apps/api` — blocked: `.env` dagi `DATABASE_URL` `localhost:3306` ga murojaat qildi, faol database topilmadi.
+- Jest dynamic import muammosi bartaraf etildi: full-AppModule E2E cookie plugin’ni register qilmaydi; cookie contract `test:fastify-runtime` orqali alohida tekshiriladi.
+
+### Required operator action
+
+- `.env` dagi `DATABASE_URL` portini ishlayotgan MySQL mapping bilan moslashtirish yoki 3307 portini band qilayotgan process/container’ni xavfsiz to‘xtatish.
+
+## 2026-09-10 — Fastify full AppModule E2E green
+
+### Changed
+
+- Full AppModule E2E’da topilgan Fastify exception filter incompatibility tuzatildi: Express `.json()` va Fastify `.send()` response contract’lari qo‘llab-quvvatlandi.
+- `AppController` va `AppService` `AppModule` metadata’siga qayta qo‘shildi; `/api/health` route 404 muammosi yopildi.
+- `.env` MySQL mapping’i `3308` bilan ishlaydigan lokal compose konfiguratsiyasiga moslashtirildi; phpMyAdmin `8080` collision’i E2E uchun servislarni selective start qilish orqali chetlab o‘tildi.
+
+### Verification
+
+- `npx prisma migrate deploy --schema=./prisma/schema.prisma` — passed: pending migration yo‘q.
+- `npm run test:e2e:fastify -w apps/api` — passed: 1 suite, 1 test, Docker MySQL bilan.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- `git diff --check` — passed.
+
+## 2026-09-10 — Fastify auth login/logout E2E green
+
+### Changed
+
+- Full Fastify `AuthModule` oqimi uchun seeded agent bilan login va logout E2E testi qo‘shildi.
+- Access/refresh cookie’lar login response’dan olinib, logout request’iga qayta yuboriladi.
+- Jest script’iga `--experimental-vm-modules` qo‘shildi; `@fastify/cookie` dynamic import runtime’da ishlaydi.
+- `RedisThrottlerStorage` shutdown lifecycle qo‘shildi va E2E’dan keyin Redis client to‘g‘ri disconnect qilinadi.
+
+### Verification
+
+- `npm run test:e2e:fastify -w apps/api` — passed: 1 suite, 2 test; Docker MySQL/Redis bilan.
+- `npm run lint -w apps/api` — passed.
+- `npm run test -w apps/api -- --runInBand` — passed: 24 suite, 96 test.
+- `npm run build -w apps/api` — passed.
+- `git diff --check` — passed.
+
+## 2026-09-10 — Fastify E2E CI job
+
+### Changed
+
+- `.github/workflows/ci.yml` ga `fastify-e2e` alohida job qo‘shildi.
+- Job MySQL va Redis service container’larini kutadi, Prisma generate/migrate/seed bajaradi va `test:e2e:fastify` ni ishga tushiradi.
+- Fastify E2E mavjud umumiy CI testidan mustaqil signal sifatida ajratildi.
+
+### Verification
+
+- `npx prettier --check .github/workflows/ci.yml` — passed.
+- `git diff --check` — passed.
+- GitHub Actions execution — not run locally; remote CI run commit push qilingandan keyin tekshiriladi.
+
+### Next
+
+- Fastify cookie plugin’ini Jest-compatible integration harness’da va alohida test database bilan tekshirish.
+
 ## 2026-09-10 — NestJS security minor alignment
 
 ### Changed

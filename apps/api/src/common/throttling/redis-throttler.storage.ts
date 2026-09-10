@@ -19,6 +19,12 @@ export class RedisThrottlerStorage implements ThrottlerStorage {
     });
   }
 
+  onModuleDestroy(): void {
+    if (this.redis.status !== 'end') {
+      this.redis.disconnect();
+    }
+  }
+
   async increment(
     key: string,
     ttl: number,

@@ -19,6 +19,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RedisThrottlerStorage } from './common/throttling/redis-throttler.storage';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -44,7 +46,9 @@ import { RedisThrottlerStorage } from './common/throttling/redis-throttler.stora
       throttlers: [{ ttl: 60_000, limit: 120 }],
     }),
   ],
+  controllers: [AppController],
   providers: [
+    AppService,
     // Global exception filter
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     // Global response wrapper

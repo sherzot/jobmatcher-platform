@@ -6,7 +6,30 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+type HttpRequest = {
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  header?: (name: string) => string | undefined;
+};
+
+type HttpResponse = {
+  getHeader?: (name: string) => unknown;
+  status: (code: number) => HttpResponse;
+  json?: (body: unknown) => unknown;
+  send?: (body: unknown) => unknown;
+};
+
+function normalizeRequestId(value: unknown): string {
+  if (typeof value === 'string' && value.length > 0) return value;
+  if (
+    Array.isArray(value) &&
+    typeof value[0] === 'string' &&
+    value[0].length > 0
+  ) {
+    return value[0];
+  }
+  return 'unknown';
+}
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -14,11 +37,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
-    const requestId = String(
-      response.getHeader('X-Request-ID') ??
-        request.header('x-request-id') ??
+    const response = ctx.getResponse<HttpResponse>();
+    const request = ctx.getRequest<HttpRequest>();
+    const requestId = normalizeRequestId(
+      response.getHeader?.('X-Request-ID') ??
+        request.header?.('x-request-id') ??
+        request.headers?.['x-request-id'] ??
         'unknown',
     );
 
@@ -58,15 +82,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       );
     }
 
-    response.status(status).json({
+    const payload = {
       success: false,
       error: {
         code,
         message,
-        path: request.url,
+        path: request.url ?? '/',
         requestId,
         timestamp: new Date().toISOString(),
       },
-    });
+    };
+    const output = response.status(status);
+    if (output.json) {
+      output.json(payload);
+    } else if (output.send) {
+      output.send(payload);
+    }
   }
 }
