@@ -65,6 +65,21 @@ Qoidalar:
 
 - Ushbu o‘zgarishni commit/push qilish va CI E2E bosqichini qayta tekshirish.
 
+## 2026-09-10 — CI E2E timeout uchun readiness strategiyasi yangilandi
+
+### Changed
+
+- CI Playwright konfiguratsiyasida API production server background’da ishga tushadi, readiness esa Web production server URL’i orqali boshqariladi.
+
+### Verification
+
+- Remote run `34455177859`: lint, test va build muvaffaqiyatli; E2E `webServer` 120 soniyalik timeout bilan yakunlangan.
+- Lokal Web lint muvaffaqiyatli. Lokal build esa sandbox’da Turbopack process/port permission xatosi bilan bloklandi; oldingi production build remote run’da muvaffaqiyatli edi.
+
+### Next
+
+- O‘zgarishni commit/push qilish va CI E2E natijasini qayta tekshirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
