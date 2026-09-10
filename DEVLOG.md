@@ -434,6 +434,19 @@ Qoidalar:
 - `git diff --check` — passed.
 - GitHub Actions execution — pending.
 
+## 2026-09-10 — API production start path fix
+
+### Changed
+
+- Nest build output `apps/api/dist/src/main.js` ekanligi repository build artifact’dan tasdiqlandi.
+- `start:prod` `node dist/src/main.js` ga, `start:fastify` esa `node dist/src/main.fastify.js` ga moslashtirildi.
+- Bu tuzatish Playwright CI webServer’ning `MODULE_NOT_FOUND: dist/main` xatosini yopadi.
+
+### Verification
+
+- Local `npm run build -w apps/api` — passed; `dist/src/main.js` va `dist/src/main.fastify.js` mavjud.
+- GitHub Actions re-run — pending.
+
 ### Next
 
 - Fastify cookie plugin’ini Jest-compatible integration harness’da va alohida test database bilan tekshirish.
