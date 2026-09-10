@@ -136,6 +136,30 @@ Qoidalar:
 - GitHub Actions run `34458471023` — lint, test, build, migration/seed va 6 ta E2E test muvaffaqiyatli.
 - Remote Dependabot open alerts `94 → 38` ga kamaydi.
 
+## 2026-09-10 — Dependency audit triage
+
+### Verification
+
+- `npm audit fix --package-lock-only --ignore-scripts` bajarildi.
+- Lokal audit 6 ta vulnerability ko‘rsatmoqda; asosiy 5 high alert `@nestjs/platform-express → multer` chain’idan kelmoqda.
+- `esbuild` uchun patch mavjud, ammo hozirgi transitive `tsx` range’i sabab avtomatik audit fix uni o‘zgartirmadi.
+
+### Known gaps
+
+- Multer upstream dependency va esbuild transitive range xavfsizlik qarori ochiq.
+
+## 2026-09-10 — NestJS security minor alignment
+
+### Changed
+
+- `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express` va `@nestjs/testing` `11.2.3` ga moslashtirildi.
+- API `tsconfig.json` implicit global type discovery’ni cheklash uchun `types: ["node"]` bilan mustahkamlandi.
+
+### Verification
+
+- `npm run test -w apps/api` — 21 suite, 89 test muvaffaqiyatli.
+- `npm run build -w apps/api` — avvalgi `TS2688` type discovery xatosi sabab qayta tekshiruv kerak.
+
 ## 2026-09-10 — Remote CI green
 
 ### Verification
