@@ -124,6 +124,17 @@ Qoidalar:
 
 - Node.js 20 deprecation’ni yo‘qotish uchun actions major versiyalarini yangilash va Dependabot security alertlarini kamaytirish.
 
+## 2026-09-10 — GitHub Actions Node.js 24 migration
+
+### Changed
+
+- CI `actions/checkout@v5`, `actions/setup-node@v5` va `actions/upload-artifact@v6` ga yangilandi.
+- Bu versiyalar Node.js 24 runtime’iga mos bo‘lib, oldingi Node.js 20 deprecation annotation’ni bartaraf etishga qaratilgan.
+
+### Next
+
+- O‘zgarishni commit/push qilish va CI annotation’lar yo‘qolganini tekshirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
