@@ -13,13 +13,20 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: process.env.CI
-    ? {
-        command:
-          "cd ../.. && (npm run start:prod -w apps/api > /tmp/jobmatcher-api.log 2>&1 &) && npm run start -w apps/web -- -p 3010",
-        url: "http://localhost:3010",
-        timeout: 120_000,
-        reuseExistingServer: false,
-      }
+    ? [
+        {
+          command: "cd ../.. && npm run start:prod -w apps/api",
+          url: "http://127.0.0.1:3011/api/health",
+          timeout: 120_000,
+          reuseExistingServer: false,
+        },
+        {
+          command: "cd ../.. && npm run start -w apps/web -- -p 3010",
+          url: "http://127.0.0.1:3010",
+          timeout: 120_000,
+          reuseExistingServer: false,
+        },
+      ]
     : [
         {
           command: "npm run start:dev -w apps/api",
