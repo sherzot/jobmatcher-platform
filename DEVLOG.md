@@ -148,6 +148,22 @@ Qoidalar:
 
 - Multer upstream dependency va esbuild transitive range xavfsizlik qarori ochiq.
 
+### Current remote status
+
+- Remote Dependabot `5` alert: `multer` 3 high + 1 low, `esbuild` 1 low.
+- `@nestjs/platform-express@11.2.3` exact `multer@2.2.0` talab qilgani sabab npm override amalda dependency tree’ni o‘zgartirmadi va olib tashlandi.
+
+## 2026-09-10 — Fastify migration spike inventarizatsiyasi
+
+### Changed
+
+- `docs/security/fastify-spike.md` qo‘shildi.
+- Express’ga bevosita bog‘langan middleware, cookie auth, guards, decorators va exception filter surface’lari ro‘yxatlandi.
+
+### Decision
+
+- Fastify migratsiyasi `multer` uchun tezkor patch emas, alohida breaking-change sprint sifatida rejalashtiriladi.
+
 ## 2026-09-10 — NestJS security minor alignment
 
 ### Changed

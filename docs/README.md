@@ -17,6 +17,7 @@ Bu katalog loyiha bo‘yicha texnik qarorlar, joriy holat va keyingi ishlarning 
 | Observability qanday boshqariladi?      | [observability/README.md](./observability/README.md)                           |
 | Production deploy qanday tekshiriladi? | [operations/deployment-checklist.md](./operations/deployment-checklist.md)     |
 | Multer security remediation qanday?     | [security/multer-remediation.md](./security/multer-remediation.md)             |
+| Fastify migration spike nima?          | [security/fastify-spike.md](./security/fastify-spike.md)                       |
 | Security vulnerability qanday xabar qilinadi? | [../SECURITY.md](../SECURITY.md)                                      |
 | Oxirgi bajarilgan ishlar qaysilar?      | [../DEVLOG.md](../DEVLOG.md)                                                   |
 
