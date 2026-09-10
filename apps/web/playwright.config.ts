@@ -15,13 +15,13 @@ export default defineConfig({
   webServer: process.env.CI
     ? [
         {
-          command: "npm run start:prod -w apps/api",
+          command: "cd ../.. && npm run start:prod -w apps/api",
           url: "http://127.0.0.1:3011/api/health",
           timeout: 120_000,
           reuseExistingServer: false,
         },
         {
-          command: "npm run start -w apps/web -- -p 3010",
+          command: "cd ../.. && npm run start -w apps/web -- -p 3010",
           url: "http://127.0.0.1:3010",
           timeout: 120_000,
           reuseExistingServer: false,

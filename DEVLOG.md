@@ -408,6 +408,19 @@ Qoidalar:
 - `npx playwright test --config=apps/web/playwright.config.ts --list` — passed: 6 test discovered.
 - GitHub Actions E2E — pending; push’dan keyin qayta tekshiriladi.
 
+## 2026-09-10 — CI Playwright workspace cwd fix
+
+### Changed
+
+- Playwright CI `webServer` command’lari `cd ../..` bilan repository root’dan ishga tushadigan qilindi.
+- `npm run ... -w apps/api` va `-w apps/web` endi `apps/web` katalogidan noto‘g‘ri workspace qidirish xatosiga duch kelmaydi.
+
+### Verification
+
+- `npx prettier --check apps/web/playwright.config.ts` — passed.
+- `npx playwright test --config=apps/web/playwright.config.ts --list` — passed: 6 test discovered.
+- `git diff --check` — passed.
+
 ### Next
 
 - Fastify cookie plugin’ini Jest-compatible integration harness’da va alohida test database bilan tekshirish.
