@@ -393,6 +393,21 @@ Qoidalar:
 - `git diff --check` — passed.
 - GitHub Actions execution — not run locally; remote CI run commit push qilingandan keyin tekshiriladi.
 
+## 2026-09-10 — CI web E2E API readiness fix
+
+### Changed
+
+- Playwright CI `webServer` konfiguratsiyasi API va web uchun ikkita serverga ajratildi.
+- API server `http://127.0.0.1:3011/api/health` URL orqali tayyor bo‘lmaguncha web E2E boshlanmaydi.
+- `localhost` IPv6/IPv4 ambiguity’sini kamaytirish uchun readiness URL’lar `127.0.0.1` ga o‘tkazildi.
+- API endi background shell process sifatida yashirin ishga tushirilmaydi; Playwright process lifecycle’ni o‘zi boshqaradi.
+
+### Verification
+
+- `npx prettier --check apps/web/playwright.config.ts` — passed.
+- `npx playwright test --config=apps/web/playwright.config.ts --list` — passed: 6 test discovered.
+- GitHub Actions E2E — pending; push’dan keyin qayta tekshiriladi.
+
 ### Next
 
 - Fastify cookie plugin’ini Jest-compatible integration harness’da va alohida test database bilan tekshirish.
