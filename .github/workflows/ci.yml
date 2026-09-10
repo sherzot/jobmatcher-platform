@@ -55,6 +55,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
       - name: Dependency audit (report-only)
         run: npm audit --audit-level=high > npm-audit-report.txt 2>&1 || true
       - run: npx prisma generate --schema=./prisma/schema.prisma

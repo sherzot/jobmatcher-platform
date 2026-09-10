@@ -98,6 +98,20 @@ Qoidalar:
 
 - Remote run `34456243406` `apps/web` cwd’da `-w apps/web` root workspace’ni topa olmaganini ko‘rsatdi; CI command’iga `cd ../..` qayta qo‘shildi.
 
+## 2026-09-10 — CI Playwright browser installation qo‘shildi
+
+### Changed
+
+- CI’da E2E’dan oldin Chromium va system dependencies o‘rnatiladigan `npx playwright install --with-deps chromium` bosqichi qo‘shildi.
+
+### Verification
+
+- Remote run `34456667548` server startup’dan o‘tib, barcha 6 E2E test browser executable yo‘qligi sababli (`chromium_headless_shell`) yiqilgan.
+
+### Next
+
+- Workflow’ni commit/push qilish va E2E testlarning real natijasini qayta tekshirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
