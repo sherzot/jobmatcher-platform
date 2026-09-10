@@ -160,6 +160,15 @@ Qoidalar:
 - `npm run test -w apps/api` — 21 suite, 89 test muvaffaqiyatli.
 - `npm run build -w apps/api` — avvalgi `TS2688` type discovery xatosi sabab qayta tekshiruv kerak.
 
+### Correction
+
+- Remote CI run `34460992242` NestJS alignment’dan keyin API lint’da 791 ta type-aware `unsafe` xato bilan to‘xtadi. Alignment hali production-ready deb hisoblanmaydi va alohida moslashtirish talab qiladi.
+
+### Resolution
+
+- Toza `npm ci` va `prisma generate`dan keyin API lint muvaffaqiyatli o‘tdi; muammo lokal stale/generated dependency state bilan bog‘liq edi.
+- API testlar (21 suite, 89 test) va build qayta muvaffaqiyatli yakunlandi.
+
 ## 2026-09-10 — Remote CI green
 
 ### Verification
