@@ -112,6 +112,23 @@ Qoidalar:
 
 - Workflow’ni commit/push qilish va E2E testlarning real natijasini qayta tekshirish.
 
+## 2026-09-10 — Next.js security update
+
+### Changed
+
+- Web `next` va `eslint-config-next` `16.3.3` ga yangilandi.
+- Dependency update’dan keyin lokal audit 6 ta vulnerability ko‘rsatdi.
+
+### Verification
+
+- `npm ls next --all` — `next@16.3.3`.
+- `npm run lint -w apps/web` — muvaffaqiyatli.
+- Lokal build sandbox Turbopack process/port permission xatosi bilan bloklandi; CI production build avval muvaffaqiyatli edi.
+
+### Next
+
+- Dependency update’ni commit/push qilish va Dependabot alertlarining remote’da qayta hisoblanishini tekshirish.
+
 ## 2026-09-10 — Remote CI green
 
 ### Verification
