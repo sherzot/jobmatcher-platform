@@ -421,6 +421,19 @@ Qoidalar:
 - `npx playwright test --config=apps/web/playwright.config.ts --list` — passed: 6 test discovered.
 - `git diff --check` — passed.
 
+## 2026-09-10 — CI API production artifact fix
+
+### Changed
+
+- Web E2E’dan oldin `npm run build -w apps/api` explicit CI step sifatida qo‘shildi.
+- Playwright `start:prod` endi mavjud `apps/api/dist/main.js` artifact’iga tayanadi.
+
+### Verification
+
+- `npx prettier --check .github/workflows/ci.yml` — passed.
+- `git diff --check` — passed.
+- GitHub Actions execution — pending.
+
 ### Next
 
 - Fastify cookie plugin’ini Jest-compatible integration harness’da va alohida test database bilan tekshirish.

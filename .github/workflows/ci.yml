@@ -65,6 +65,8 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+      - name: Build API production entrypoint for web E2E
+        run: npm run build -w apps/api
       - run: npm run test:e2e:ci -w apps/web
       - if: always()
         uses: actions/upload-artifact@v6
