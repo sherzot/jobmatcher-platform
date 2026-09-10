@@ -164,6 +164,12 @@ Qoidalar:
 
 - Fastify migratsiyasi `multer` uchun tezkor patch emas, alohida breaking-change sprint sifatida rejalashtiriladi.
 
+### Compatibility check
+
+- `@nestjs/platform-fastify@11.2.3` registry’da mavjud; Fastify 5.11.3, `@fastify/cors` 11.3.0 va `@fastify/formbody` 8.0.2 bilan keladi.
+- `@fastify/cookie` 11.1.2 mavjudligi tasdiqlandi.
+- Production dependency graph’iga hali o‘zgartirish kiritilmadi.
+
 ## 2026-09-10 — NestJS security minor alignment
 
 ### Changed
