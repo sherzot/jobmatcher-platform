@@ -50,6 +50,21 @@ Qoidalar:
 
 - Ushbu tuzatishni commit/push qilish va CI’ni qayta ishga tushirish.
 
+## 2026-09-10 — CI E2E server startup barqarorlashtirildi
+
+### Changed
+
+- Playwright CI rejimida API va Web uchun watch/development serverlar o‘rniga oldindan build qilingan production serverlar ishlatiladigan qilindi.
+
+### Verification
+
+- Remote CI run `34454257762` lint’dan o‘tib, E2E bosqichida `webServer` 120 soniyalik timeout bilan to‘xtagani log orqali tasdiqlandi.
+- Lokal API/Web production build’lar avval muvaffaqiyatli o‘tgan.
+
+### Next
+
+- Ushbu o‘zgarishni commit/push qilish va CI E2E bosqichini qayta tekshirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
