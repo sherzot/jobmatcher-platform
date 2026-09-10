@@ -20,7 +20,7 @@
     "docker:down": "docker-compose --env-file .env -f docker/docker-compose.dev.yml down"
   },
   "devDependencies": {
-    "prisma": "^5.14.0",
+    "prisma": "^7.10.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "turbo": "^2.0.0",
