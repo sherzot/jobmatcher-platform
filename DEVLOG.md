@@ -135,6 +135,14 @@ Qoidalar:
 
 - O‘zgarishni commit/push qilish va CI annotation’lar yo‘qolganini tekshirish.
 
+## 2026-09-10 — Node.js 24 CI migration verified
+
+### Verification
+
+- GitHub Actions run `34457689137` — lint, test, build, migration/seed va 6 ta E2E test muvaffaqiyatli.
+- `actions/checkout@v5`, `setup-node@v5`, `upload-artifact@v6` bilan job green yakunlandi.
+- Oldingi Node.js 20 deprecation annotation qayd etilmadi.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
