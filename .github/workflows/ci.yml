@@ -69,7 +69,7 @@ jobs:
         run: npm run build -w apps/api
       - run: npm run test:e2e:ci -w apps/web
       - if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-e2e-diagnostics
           path: |
