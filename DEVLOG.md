@@ -129,6 +129,13 @@ Qoidalar:
 
 - Dependency update’ni commit/push qilish va Dependabot alertlarining remote’da qayta hisoblanishini tekshirish.
 
+## 2026-09-10 — Next.js update remote’da tasdiqlandi
+
+### Verification
+
+- GitHub Actions run `34458471023` — lint, test, build, migration/seed va 6 ta E2E test muvaffaqiyatli.
+- Remote Dependabot open alerts `94 → 38` ga kamaydi.
+
 ## 2026-09-10 — Remote CI green
 
 ### Verification
