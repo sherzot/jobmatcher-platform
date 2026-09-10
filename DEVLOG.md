@@ -31,6 +31,25 @@ Qoidalar:
 
 - Upstream NestJS patch chiqqanda dependency update qilish; aks holda alohida Fastify migration sprint’ini rejalashtirish.
 
+## 2026-09-10 — Remote CI lint xatosi tuzatildi
+
+### Changed
+
+- `packages/shared-types/tsconfig.json` qo‘shildi; package lint endi aniq project config bilan ishlaydi.
+
+### Verification
+
+- GitHub Actions run `34451487013` lint bosqichida `@jobmatcher/shared-types` uchun `tsconfig.json` yo‘qligi sababli to‘xtagani log orqali tasdiqlandi.
+- Lokal `npm run lint -w packages/shared-types` bilan qayta tekshirish bajariladi.
+
+### Correction
+
+- Birinchi config implicit global `@types` paketlarini yuklagani sababli runner’da `TS2688` berdi; `compilerOptions.types: []` qo‘shilgach package lint lokal muvaffaqiyatli o‘tdi.
+
+### Next
+
+- Ushbu tuzatishni commit/push qilish va CI’ni qayta ishga tushirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
