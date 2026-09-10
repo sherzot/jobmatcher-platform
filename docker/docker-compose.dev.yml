@@ -69,7 +69,7 @@ services:
       PMA_USER: ${MYSQL_USER:-jobmatcher}
       PMA_PASSWORD: ${MYSQL_PASSWORD:-jobmatcher123}
     ports:
-      - '127.0.0.1:8080:80'
+      - '127.0.0.1:8081:80'
     depends_on:
       - mysql
     networks:
