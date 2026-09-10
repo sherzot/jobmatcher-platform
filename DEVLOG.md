@@ -112,6 +112,18 @@ Qoidalar:
 
 - Workflow’ni commit/push qilish va E2E testlarning real natijasini qayta tekshirish.
 
+## 2026-09-10 — Remote CI green
+
+### Verification
+
+- GitHub Actions run `34457223584` — lint, API test, build, Prisma migration/seed va 6 ta Playwright E2E test muvaffaqiyatli.
+- CI umumiy davomiyligi: 2m15s.
+- Faqat GitHub Actions Node.js 20 deprecation annotation mavjud; job’ni bloklamadi.
+
+### Next
+
+- Node.js 20 deprecation’ni yo‘qotish uchun actions major versiyalarini yangilash va Dependabot security alertlarini kamaytirish.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
