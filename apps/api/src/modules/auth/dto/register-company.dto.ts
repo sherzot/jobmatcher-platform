@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsOptional,
+} from 'class-validator';
 
 export class RegisterCompanyDto {
   @IsEmail({}, { message: '有効なメールアドレスを入力してください。' })

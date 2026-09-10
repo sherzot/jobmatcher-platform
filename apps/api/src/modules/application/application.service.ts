@@ -5,11 +5,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ApplicationStatus, JobStatus, UserRole } from '@prisma/client';
+import { ApplicationStatus, JobStatus, Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ApplyJobDto } from './dto/apply-job.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
+import {
+  canAgentTransitionApplication,
+  canCandidateWithdrawApplication,
+} from './domain/application-status.policy';
+import {
+  createTemporaryBusinessCode,
+  formatApplicationCode,
+} from '../../common/domain/business-code';
 
 @Injectable()
 export class ApplicationService {
@@ -18,9 +26,12 @@ export class ApplicationService {
   // ── Apply to job ──────────────────────────────────────────
 
   async apply(userId: number, jobCode: string, dto: ApplyJobDto) {
-    const job = await this.prisma.job.findUnique({ where: { code: jobCode } });
+    const job = await this.prisma.job.findUnique({ where: { jobCode } });
     if (!job || job.status !== JobStatus.ACTIVE) {
-      throw new NotFoundException({ code: 'JOB_NOT_FOUND', message: '応募可能な求人が見つかりません。' });
+      throw new NotFoundException({
+        code: 'JOB_NOT_FOUND',
+        message: '応募可能な求人が見つかりません。',
+      });
     }
 
     // Check for duplicate application
@@ -35,7 +46,7 @@ export class ApplicationService {
     }
 
     // Capture resume snapshot
-    const profile = await this.prisma.profile.findUnique({
+    const candidate = await this.prisma.candidate.findUnique({
       where: { userId },
       include: {
         resume: {
@@ -49,37 +60,67 @@ export class ApplicationService {
       },
     });
 
-    const resumeSnapshot = profile ? JSON.stringify(profile) : null;
+    const resumeSnapshot = candidate ? JSON.stringify(candidate) : null;
 
-    const application = await this.prisma.application.create({
-      data: {
-        userId,
-        jobId: job.id,
-        status: ApplicationStatus.PENDING,
-        coverLetter: dto.coverLetter,
-        resumeSnapshot,
-      },
-    });
+    try {
+      return await this.prisma.$transaction(async (transaction) => {
+        const created = await transaction.application.create({
+          data: {
+            appCode: createTemporaryBusinessCode(14),
+            userId,
+            jobId: job.id,
+            status: ApplicationStatus.PENDING,
+            coverLetter: dto.coverLetter,
+            resumeSnapshot,
+          },
+        });
 
-    // Record initial status history
-    await this.prisma.applicationStatusHistory.create({
-      data: {
-        applicationId: application.id,
-        fromStatus: null,
-        toStatus: ApplicationStatus.PENDING,
-        changedBy: userId,
-      },
-    });
+        const coded = await transaction.application.update({
+          where: { id: created.id },
+          data: { appCode: formatApplicationCode(created.id) },
+        });
 
-    // Increment job apply count
-    await this.prisma.job.update({
-      where: { id: job.id },
-      data: { applyCount: { increment: 1 } },
-    });
+        await transaction.applicationStatusHistory.create({
+          data: {
+            applicationId: created.id,
+            fromStatus: null,
+            toStatus: ApplicationStatus.PENDING,
+            changedBy: userId,
+          },
+        });
 
-    // TODO: trigger notification queue (email to agent + in-app)
+        await transaction.job.update({
+          where: { id: job.id },
+          data: { applyCount: { increment: 1 } },
+        });
+        await transaction.outboxEvent.create({
+          data: {
+            aggregateType: 'Application',
+            aggregateId: String(coded.id),
+            eventType: 'ApplicationSubmitted',
+            payload: {
+              applicationId: coded.id,
+              candidateUserId: userId,
+              jobId: job.id,
+              status: coded.status,
+            },
+          },
+        });
 
-    return application;
+        return coded;
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException({
+          code: 'ALREADY_APPLIED',
+          message: 'この求人にはすでに応募済みです。',
+        });
+      }
+      throw error;
+    }
   }
 
   // ── Get my applications (CANDIDATE) ───────────────────────
@@ -91,7 +132,7 @@ export class ApplicationService {
       include: {
         job: {
           select: {
-            code: true,
+            jobCode: true,
             title: true,
             jobType: true,
             prefecture: true,
@@ -110,7 +151,7 @@ export class ApplicationService {
 
   async getApplication(actor: JwtPayload, applicationCode: string) {
     const application = await this.prisma.application.findUnique({
-      where: { code: applicationCode },
+      where: { appCode: applicationCode },
       include: {
         job: { include: { company: true } },
         statusHistory: { orderBy: { createdAt: 'asc' } },
@@ -118,12 +159,23 @@ export class ApplicationService {
     });
 
     if (!application) {
-      throw new NotFoundException({ code: 'APPLICATION_NOT_FOUND', message: '応募が見つかりません。' });
+      throw new NotFoundException({
+        code: 'APPLICATION_NOT_FOUND',
+        message: '応募が見つかりません。',
+      });
     }
 
-    // CANDIDATE can only see own applications
-    if (actor.role === UserRole.CANDIDATE && application.userId !== actor.sub) {
-      throw new ForbiddenException({ code: 'FORBIDDEN', message: 'アクセスが拒否されました。' });
+    if (actor.role === UserRole.CANDIDATE) {
+      if (application.userId !== actor.sub) {
+        throw this.applicationForbidden();
+      }
+    } else if (actor.role === UserRole.AGENT) {
+      await this.assertAgentAssignedToCompany(
+        actor.sub,
+        application.job.companyId,
+      );
+    } else if (actor.role !== UserRole.ADMIN) {
+      throw this.applicationForbidden();
     }
 
     return application;
@@ -131,14 +183,22 @@ export class ApplicationService {
 
   // ── Update application status (AGENT) ─────────────────────
 
-  async updateStatus(agentUserId: number, applicationCode: string, dto: UpdateStatusDto) {
+  async updateStatus(
+    agentUserId: number,
+    applicationCode: string,
+    dto: UpdateStatusDto,
+  ) {
     const application = await this.prisma.application.findUnique({
-      where: { code: applicationCode },
+      where: { appCode: applicationCode },
     });
 
     if (!application) {
-      throw new NotFoundException({ code: 'APPLICATION_NOT_FOUND', message: '応募が見つかりません。' });
+      throw new NotFoundException({
+        code: 'APPLICATION_NOT_FOUND',
+        message: '応募が見つかりません。',
+      });
     }
+    await this.assertAgentAssignedToJob(agentUserId, application.jobId);
 
     if (application.status === dto.status) {
       throw new BadRequestException({
@@ -146,18 +206,30 @@ export class ApplicationService {
         message: '現在のステータスと同じです。',
       });
     }
+    if (!canAgentTransitionApplication(application.status, dto.status)) {
+      throw new BadRequestException({
+        code: 'INVALID_STATUS_TRANSITION',
+        message: 'この応募ステータスへの変更は許可されていません。',
+      });
+    }
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.application.update({
-        where: { id: application.id },
+    return this.prisma.$transaction(async (transaction) => {
+      const transition = await transaction.application.updateMany({
+        where: { id: application.id, status: application.status },
         data: {
           status: dto.status,
           agentNote: dto.note,
           rejectionReason:
             dto.status === ApplicationStatus.REJECTED ? dto.note : undefined,
         },
-      }),
-      this.prisma.applicationStatusHistory.create({
+      });
+      if (transition.count !== 1) {
+        throw new ConflictException({
+          code: 'APPLICATION_STATUS_CONFLICT',
+          message: '応募ステータスが更新されました。再読み込みしてください。',
+        });
+      }
+      await transaction.applicationStatusHistory.create({
         data: {
           applicationId: application.id,
           fromStatus: application.status,
@@ -165,65 +237,101 @@ export class ApplicationService {
           note: dto.note,
           changedBy: agentUserId,
         },
-      }),
-    ]);
-
-    // TODO: trigger notification queue (email + in-app to candidate)
-
-    return updated;
+      });
+      await transaction.outboxEvent.create({
+        data: {
+          aggregateType: 'Application',
+          aggregateId: String(application.id),
+          eventType: 'ApplicationStatusChanged',
+          payload: {
+            applicationId: application.id,
+            fromStatus: application.status,
+            toStatus: dto.status,
+            changedByUserId: agentUserId,
+          },
+        },
+      });
+      return transaction.application.findUniqueOrThrow({
+        where: { id: application.id },
+      });
+    });
   }
 
   // ── Withdraw application (CANDIDATE) ─────────────────────
 
   async withdraw(userId: number, applicationCode: string) {
     const application = await this.prisma.application.findUnique({
-      where: { code: applicationCode },
+      where: { appCode: applicationCode },
     });
 
     if (!application) {
-      throw new NotFoundException({ code: 'APPLICATION_NOT_FOUND', message: '応募が見つかりません。' });
+      throw new NotFoundException({
+        code: 'APPLICATION_NOT_FOUND',
+        message: '応募が見つかりません。',
+      });
     }
     if (application.userId !== userId) {
-      throw new ForbiddenException({ code: 'FORBIDDEN', message: 'アクセスが拒否されました。' });
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'アクセスが拒否されました。',
+      });
     }
 
-    const terminal: ApplicationStatus[] = [
-      ApplicationStatus.REJECTED,
-      ApplicationStatus.WITHDRAWN,
-      ApplicationStatus.ACCEPTED,
-    ];
-    if (terminal.includes(application.status)) {
+    if (!canCandidateWithdrawApplication(application.status)) {
       throw new BadRequestException({
         code: 'CANNOT_WITHDRAW',
         message: 'この応募は取り消しできません。',
       });
     }
 
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.application.update({
-        where: { id: application.id },
+    return this.prisma.$transaction(async (transaction) => {
+      const transition = await transaction.application.updateMany({
+        where: { id: application.id, status: application.status },
         data: { status: ApplicationStatus.WITHDRAWN },
-      }),
-      this.prisma.applicationStatusHistory.create({
+      });
+      if (transition.count !== 1) {
+        throw new ConflictException({
+          code: 'APPLICATION_STATUS_CONFLICT',
+          message: '応募ステータスが更新されました。再読み込みしてください。',
+        });
+      }
+      await transaction.applicationStatusHistory.create({
         data: {
           applicationId: application.id,
           fromStatus: application.status,
           toStatus: ApplicationStatus.WITHDRAWN,
           changedBy: userId,
         },
-      }),
-    ]);
-
-    return updated;
+      });
+      await transaction.outboxEvent.create({
+        data: {
+          aggregateType: 'Application',
+          aggregateId: String(application.id),
+          eventType: 'ApplicationWithdrawn',
+          payload: {
+            applicationId: application.id,
+            fromStatus: application.status,
+            withdrawnByUserId: userId,
+          },
+        },
+      });
+      return transaction.application.findUniqueOrThrow({
+        where: { id: application.id },
+      });
+    });
   }
 
   // ── Agent: list all applications for a job ────────────────
 
   async getJobApplications(agentUserId: number, jobCode: string) {
-    const job = await this.prisma.job.findUnique({ where: { code: jobCode } });
+    const job = await this.prisma.job.findUnique({ where: { jobCode } });
     if (!job) {
-      throw new NotFoundException({ code: 'JOB_NOT_FOUND', message: '求人が見つかりません。' });
+      throw new NotFoundException({
+        code: 'JOB_NOT_FOUND',
+        message: '求人が見つかりません。',
+      });
     }
+    await this.assertAgentAssignedToCompany(agentUserId, job.companyId);
 
     return this.prisma.application.findMany({
       where: { jobId: job.id },
@@ -231,10 +339,10 @@ export class ApplicationService {
       include: {
         user: {
           select: {
-            code: true,
             email: true,
-            profile: {
+            candidate: {
               select: {
+                userCode: true,
                 firstName: true,
                 lastName: true,
                 avatarUrl: true,
@@ -246,6 +354,49 @@ export class ApplicationService {
         },
         statusHistory: { orderBy: { createdAt: 'asc' } },
       },
+    });
+  }
+
+  private async assertAgentAssignedToJob(agentUserId: number, jobId: number) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      select: { companyId: true },
+    });
+    if (!job) {
+      throw new NotFoundException({
+        code: 'JOB_NOT_FOUND',
+        message: '求人が見つかりません。',
+      });
+    }
+    await this.assertAgentAssignedToCompany(agentUserId, job.companyId);
+  }
+
+  private async assertAgentAssignedToCompany(
+    agentUserId: number,
+    companyId: number,
+  ) {
+    const agent = await this.prisma.agent.findUnique({
+      where: { userId: agentUserId },
+      select: { id: true, isActive: true },
+    });
+    if (!agent || !agent.isActive) {
+      throw this.applicationForbidden();
+    }
+    const assignment = await this.prisma.agentCompany.findUnique({
+      where: {
+        agentId_companyId: { agentId: agent.id, companyId },
+      },
+      select: { id: true },
+    });
+    if (!assignment) {
+      throw this.applicationForbidden();
+    }
+  }
+
+  private applicationForbidden() {
+    return new ForbiddenException({
+      code: 'FORBIDDEN',
+      message: 'アクセスが拒否されました。',
     });
   }
 }

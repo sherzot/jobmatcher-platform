@@ -9,8 +9,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
-const YEAR_MONTH_REGEX = /^\d{4}年\d{2}月$/;
+import { YEAR_MONTH_PATTERN } from '../domain/year-month';
 
 export class UpsertEducationDto {
   @ApiPropertyOptional({ description: 'Update existing (omit to create)' })
@@ -39,12 +38,16 @@ export class UpsertEducationDto {
 
   @ApiProperty({ example: '2018年04月' })
   @IsNotEmpty()
-  @Matches(YEAR_MONTH_REGEX, { message: 'startDate must be in YYYY年MM月 format' })
+  @Matches(YEAR_MONTH_PATTERN, {
+    message: 'startDate must be in YYYY年MM月 format',
+  })
   startDate: string;
 
   @ApiPropertyOptional({ example: '2022年03月' })
   @IsOptional()
-  @Matches(YEAR_MONTH_REGEX, { message: 'endDate must be in YYYY年MM月 format' })
+  @Matches(YEAR_MONTH_PATTERN, {
+    message: 'endDate must be in YYYY年MM月 format',
+  })
   endDate?: string;
 
   @ApiPropertyOptional()

@@ -16,6 +16,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const requestId = String(
+      response.getHeader('X-Request-ID') ??
+        request.header('x-request-id') ??
+        'unknown',
+    );
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let code = 'INTERNAL_SERVER_ERROR';
@@ -27,7 +32,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const res = exceptionResponse as Record<string, unknown>;
-        code = (res.code as string) ?? exception.constructor.name.replace('Exception', '').toUpperCase();
+        code =
+          (res.code as string) ??
+          exception.constructor.name.replace('Exception', '').toUpperCase();
         message = (res.message as string) ?? exception.message;
 
         // Handle class-validator array of errors
@@ -35,11 +42,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           message = (res.message as string[]).join(', ');
         }
       } else {
-        message = exceptionResponse as string;
-        code = exception.constructor.name.replace('Exception', '').toUpperCase();
+        message = exceptionResponse;
+        code = exception.constructor.name
+          .replace('Exception', '')
+          .toUpperCase();
       }
     } else if (exception instanceof Error) {
-      this.logger.error(`Unhandled exception: ${exception.message}`, exception.stack);
+      this.logger.error(
+        JSON.stringify({
+          event: 'http.exception',
+          requestId,
+          message: exception.message,
+          stack: exception.stack,
+        }),
+      );
     }
 
     response.status(status).json({
@@ -48,6 +64,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         code,
         message,
         path: request.url,
+        requestId,
         timestamp: new Date().toISOString(),
       },
     });

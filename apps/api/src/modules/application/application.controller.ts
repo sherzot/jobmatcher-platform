@@ -48,11 +48,9 @@ export class ApplicationController {
   // ── GET /api/application/:code ────────────────────────────
 
   @Get(':code')
+  @Roles(UserRole.CANDIDATE, UserRole.AGENT, UserRole.ADMIN)
   @ApiOperation({ summary: '応募詳細取得' })
-  getApplication(
-    @CurrentUser() user: JwtPayload,
-    @Param('code') code: string,
-  ) {
+  getApplication(@CurrentUser() user: JwtPayload, @Param('code') code: string) {
     return this.applicationService.getApplication(user, code);
   }
 
@@ -76,10 +74,7 @@ export class ApplicationController {
   @HttpCode(HttpStatus.OK)
   @Roles(UserRole.CANDIDATE)
   @ApiOperation({ summary: '応募を取り消す' })
-  withdraw(
-    @CurrentUser() user: JwtPayload,
-    @Param('code') code: string,
-  ) {
+  withdraw(@CurrentUser() user: JwtPayload, @Param('code') code: string) {
     return this.applicationService.withdraw(user.sub, code);
   }
 

@@ -17,6 +17,7 @@ Thumbs.db
 coverage/
 
 .next/
+test-results/
 
 __pycache__/
 *.pyc

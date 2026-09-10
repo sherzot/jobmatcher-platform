@@ -1,10 +1,24 @@
 # JobMatch Platform
 
+[![CI](https://github.com/sherzot/jobmatcher-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/sherzot/jobmatcher-platform/actions/workflows/ci.yml)
+
 **AI-Assisted Career Operating System** — Japan (JP) & Uzbekistan (UZ)
 
 > Production-grade platform combining: Job Marketplace · ATS Workflow · AI Matching · Document Automation · Recruiter Tools · Candidate Career OS
 
 [日本語版 README →](./README.ja.md) | [Architecture & Rules →](./ARCHITECTURE.md)
+
+## Documentation
+
+Project documentation is organized from the [documentation index](./docs/README.md).
+
+- [Current project status](./docs/PROJECT_STATUS.md) — verified implementation state and known gaps
+- [Delivery roadmap](./docs/ROADMAP.md) — prioritized implementation sequence and completion gates
+- [Domain model](./docs/architecture/domain-model.md) — DDD bounded contexts and ownership
+- [Clean Architecture](./docs/architecture/clean-architecture.md) — dependency and module rules
+- [Security roadmap](./docs/security/README.md) — security controls and verification plan
+- [AI engineering roadmap](./docs/ai/README.md) — safe AI delivery stages
+- [Development log](./DEVLOG.md) — chronological record of completed work and verification
 
 ---
 
@@ -69,6 +83,16 @@ jobmatcher-platform/
 
 ## Quick Start
 
+### Quality gates
+
+```bash
+npm run lint
+npm run test
+npm run test:e2e -w apps/web
+# CI-equivalent E2E mode
+npm run test:e2e:ci -w apps/web
+```
+
 ### Prerequisites
 - Node.js ≥ 20, npm ≥ 10
 - Docker Desktop
@@ -92,7 +116,7 @@ cp .env.example .env
 
 ```bash
 npm run docker:dev
-# MySQL :3307 | Redis :6379 | MinIO :9000 | phpMyAdmin :8080
+# MySQL :3306 | Redis :6379 | MinIO :9000 | phpMyAdmin :8080
 ```
 
 ### 4. Push schema & seed
@@ -134,6 +158,14 @@ cd apps/api && npm run start:dev  # http://localhost:3001
 - JWT auth (access + refresh tokens) with role-based guards
 - Prisma middleware — auto-generates BUSINESS IDENTIFIER after every record creation
 - Company registration approval workflow (agent must approve before company can login)
+- Transactional outbox records for application and company lifecycle events
+- Claim/retry outbox dispatcher port and transactional inbox idempotency guard
+- AI execution audit metadata model (purpose, model/prompt version, tokens, latency, cost); prompts and model content are not stored
+- Resume extraction request/proposal workflow: validated AI output is applied only after explicit candidate confirmation
+
+The concrete AI provider/model, parser consumer, queue transport/scheduler, and
+object-storage upload adapter are **UNKNOWN** (not implemented or confirmed by
+repository evidence). Embeddings and matching execution also remain planned.
 
 ### ✅ Frontend (mock data)
 
@@ -241,7 +273,7 @@ Every status change triggers: email + in-app notification + chatbot message *(no
 
 ```env
 # Database
-DATABASE_URL="mysql://<user>:<password>@localhost:3307/jobmatcher_db"
+DATABASE_URL="mysql://<user>:<password>@localhost:3306/jobmatcher_db"
 
 # JWT — use strong random secrets (min 32 chars)
 JWT_ACCESS_SECRET=<random_secret>

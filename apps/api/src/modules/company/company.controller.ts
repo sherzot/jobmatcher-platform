@@ -11,6 +11,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { CompanyService } from './company.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { ReviewCompanyDto } from './dto/review-company.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -75,5 +76,22 @@ export class CompanyController {
     @Param('code') code: string,
   ) {
     return this.companyService.setCompanyActive(user.sub, code, false);
+  }
+
+  @Patch(':code/review')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.AGENT)
+  @ApiOperation({ summary: '企業登録を承認・却下する（エージェントのみ）' })
+  reviewCompany(
+    @CurrentUser() user: JwtPayload,
+    @Param('code') code: string,
+    @Body() dto: ReviewCompanyDto,
+  ) {
+    return this.companyService.reviewCompany(
+      user.sub,
+      code,
+      dto.action,
+      dto.reason,
+    );
   }
 }

@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import { UpsertEducationDto } from './dto/upsert-education.dto';
 import { UpsertExperienceDto } from './dto/upsert-experience.dto';
 import { UpsertSkillDto } from './dto/upsert-skill.dto';
 import { UpsertQualificationDto } from './dto/upsert-qualification.dto';
+import { RequestResumeExtractionDto } from './dto/request-resume-extraction.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import type { JwtPayload } from '../auth/types/jwt-payload.type';
@@ -83,10 +85,7 @@ export class ResumeController {
   @Post('skill')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'スキル 追加・更新' })
-  upsertSkill(
-    @CurrentUser() user: JwtPayload,
-    @Body() dto: UpsertSkillDto,
-  ) {
+  upsertSkill(@CurrentUser() user: JwtPayload, @Body() dto: UpsertSkillDto) {
     return this.resumeService.upsertSkill(user.sub, dto);
   }
 
@@ -120,5 +119,46 @@ export class ResumeController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.resumeService.deleteQualification(user.sub, id);
+  }
+
+  // ── AI-assisted extraction ─────────────────────────────────
+
+  @Post('extractions')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: '履歴書解析の依頼' })
+  requestExtraction(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: RequestResumeExtractionDto,
+  ) {
+    return this.resumeService.requestExtraction(user.sub, dto);
+  }
+
+  @Get('extractions/:id')
+  @ApiOperation({ summary: '履歴書解析状態の取得' })
+  getExtraction(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.resumeService.getExtraction(user.sub, id);
+  }
+
+  @Post('extractions/:id/confirm')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '履歴書解析結果を確認して反映' })
+  confirmExtraction(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.resumeService.confirmExtraction(user.sub, id);
+  }
+
+  @Post('extractions/:id/reject')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '履歴書解析結果を却下' })
+  rejectExtraction(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.resumeService.rejectExtraction(user.sub, id);
   }
 }

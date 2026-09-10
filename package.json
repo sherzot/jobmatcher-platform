@@ -2,6 +2,7 @@
   "name": "jobmatcher-platform",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "npm@11.5.2",
   "workspaces": [
     "apps/*",
     "packages/*"

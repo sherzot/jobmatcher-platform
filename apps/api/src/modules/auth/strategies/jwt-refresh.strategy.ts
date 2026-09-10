@@ -6,7 +6,10 @@ import { Request } from 'express';
 import { JwtPayload } from '../types/jwt-payload.type';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(private readonly config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -18,7 +21,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     });
   }
 
-  validate(req: Request, payload: JwtPayload): JwtPayload & { refreshToken: string } {
+  validate(
+    req: Request,
+    payload: JwtPayload,
+  ): JwtPayload & { refreshToken: string } {
     const refreshToken = req.cookies?.['refresh_token'] as string | undefined;
     if (!refreshToken) {
       throw new UnauthorizedException({

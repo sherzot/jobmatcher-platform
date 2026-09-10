@@ -11,10 +11,14 @@ import { ApplicationModule } from './modules/application/application.module';
 import { CompanyModule } from './modules/company/company.module';
 import { AgentModule } from './modules/agent/agent.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AIGovernanceModule } from './modules/ai-governance/ai-governance.module';
+import { IntegrationModule } from './modules/integration/integration.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { RedisThrottlerStorage } from './common/throttling/redis-throttler.storage';
 
 @Module({
   imports: [
@@ -33,6 +37,12 @@ import { RolesGuard } from './common/guards/roles.guard';
     CompanyModule,
     AgentModule,
     AdminModule,
+    AIGovernanceModule,
+    IntegrationModule,
+    ThrottlerModule.forRoot({
+      storage: new RedisThrottlerStorage(),
+      throttlers: [{ ttl: 60_000, limit: 120 }],
+    }),
   ],
   providers: [
     // Global exception filter
@@ -43,6 +53,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     // RBAC guard — use @Roles() to restrict
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

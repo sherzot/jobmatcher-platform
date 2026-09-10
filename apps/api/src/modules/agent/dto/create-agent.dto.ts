@@ -14,7 +14,13 @@ export class CreateAgentDto {
   email: string;
 
   @ApiProperty({ description: 'Min 8 chars, uppercase + lowercase + digit' })
-  @IsStrongPassword({ minLength: 8, minUppercase: 1, minLowercase: 1, minNumbers: 1, minSymbols: 0 })
+  @IsStrongPassword({
+    minLength: 8,
+    minUppercase: 1,
+    minLowercase: 1,
+    minNumbers: 1,
+    minSymbols: 0,
+  })
   password: string;
 
   @ApiProperty({ example: '山田 太郎' })

@@ -46,11 +46,14 @@ export interface CompanyJob {
   id: string;
   code: string;
   title: string;
+  description?: string;
   jobType: string;
   workLocation: string;
   prefecture: string;
   salaryMin: number;
   salaryMax: number;
+  salaryType?: string;
+  closesAt?: string | null;
   japaneseLevel: string;
   visaSponsorship: boolean;
   skills: string[];

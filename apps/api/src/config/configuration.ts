@@ -1,8 +1,15 @@
 import * as Joi from 'joi';
 
 export const configValidationSchema = Joi.object({
-  NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+  NODE_ENV: Joi.string()
+    .valid('development', 'production', 'test')
+    .default('development'),
   PORT: Joi.number().default(3001),
+  LOG_LEVELS: Joi.string()
+    .pattern(
+      /^(log|error|warn|debug|verbose)(,(log|error|warn|debug|verbose))*$/,
+    )
+    .default('error,warn,log'),
 
   DATABASE_URL: Joi.string().required(),
 
@@ -13,6 +20,7 @@ export const configValidationSchema = Joi.object({
 
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().default(6379),
+  REDIS_PASSWORD: Joi.string().allow('').optional(),
 
   SMTP_HOST: Joi.string().optional(),
   SMTP_PORT: Joi.number().default(587),

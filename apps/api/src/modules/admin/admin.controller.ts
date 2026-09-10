@@ -42,20 +42,14 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'ユーザー一覧' })
-  listUsers(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
+  listUsers(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.adminService.listUsers(page, limit);
   }
 
   @Patch('users/:code/status')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'ユーザーステータス変更' })
-  setUserStatus(
-    @Param('code') code: string,
-    @Body() dto: SetUserStatusDto,
-  ) {
+  setUserStatus(@Param('code') code: string, @Body() dto: SetUserStatusDto) {
     return this.adminService.setUserStatus(code, dto.status);
   }
 
@@ -78,10 +72,7 @@ export class AdminController {
 
   @Get('companies')
   @ApiOperation({ summary: '企業一覧' })
-  listCompanies(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
+  listCompanies(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.adminService.listCompanies(page, limit);
   }
 

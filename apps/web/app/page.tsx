@@ -1,91 +1,92 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { PublicHeader } from '@/components/layout/PublicHeader';
-import { MOCK_JOBS } from '@/lib/mock/jobs';
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { PublicHeader } from "@/components/layout/PublicHeader";
+import { MOCK_JOBS } from "@/lib/mock/jobs";
 
 const STATS = [
-  { value: '5,200+', label: '公開求人数', sublabel: '毎週更新' },
-  { value: '320+', label: '掲載企業', sublabel: '日本・ウズベキスタン' },
-  { value: '12,800+', label: '登録者数', sublabel: '求職者・候補者' },
-  { value: '94%', label: '内定率', sublabel: 'AI マッチング利用者' },
+  { value: "5,200+", label: "公開求人数", sublabel: "毎週更新" },
+  { value: "320+", label: "掲載企業", sublabel: "日本・ウズベキスタン" },
+  { value: "12,800+", label: "登録者数", sublabel: "求職者・候補者" },
+  { value: "94%", label: "内定率", sublabel: "AI マッチング利用者" },
 ];
 
 const HOW_IT_WORKS = [
   {
-    step: '01',
-    title: '無料登録',
-    desc: 'メールアドレスだけで30秒で登録完了。履歴書は後から入力できます。',
-    color: 'bg-indigo-50 text-indigo-600',
+    step: "01",
+    title: "無料登録",
+    desc: "メールアドレスだけで30秒で登録完了。履歴書は後から入力できます。",
+    color: "bg-indigo-50 text-indigo-600",
   },
   {
-    step: '02',
-    title: 'プロフィール入力',
-    desc: '学歴・職歴・スキルを入力。PDF履歴書のアップロードでAIが自動入力します。',
-    color: 'bg-violet-50 text-violet-600',
+    step: "02",
+    title: "プロフィール入力",
+    desc: "学歴・職歴・スキルを入力。PDF履歴書のアップロードでAIが自動入力します。",
+    color: "bg-violet-50 text-violet-600",
   },
   {
-    step: '03',
-    title: 'AIマッチング',
-    desc: 'あなたの経験とスキルに合った求人をAIが自動でレコメンドします。',
-    color: 'bg-blue-50 text-blue-600',
+    step: "03",
+    title: "AIマッチング",
+    desc: "あなたの経験とスキルに合った求人をAIが自動でレコメンドします。",
+    color: "bg-blue-50 text-blue-600",
   },
   {
-    step: '04',
-    title: 'エージェントと相談',
-    desc: '専任エージェントがサポート。面接準備から内定まで一貫してサポートします。',
-    color: 'bg-green-50 text-green-600',
+    step: "04",
+    title: "エージェントと相談",
+    desc: "専任エージェントがサポート。面接準備から内定まで一貫してサポートします。",
+    color: "bg-green-50 text-green-600",
   },
 ];
 
 const TESTIMONIALS = [
   {
-    name: 'Bobur Yusupov',
-    role: 'ソフトウェアエンジニア',
-    company: '東京 IT 企業',
-    avatar: 'B',
-    avatarColor: 'bg-indigo-500',
-    text: 'ウズベキスタンから日本へ転職を考えていましたが、JobMatchのエージェントが全てサポートしてくれました。ビザの手続きから面接対策まで、本当に助かりました。',
+    name: "Bobur Yusupov",
+    role: "ソフトウェアエンジニア",
+    company: "東京 IT 企業",
+    avatar: "B",
+    avatarColor: "bg-indigo-500",
+    text: "ウズベキスタンから日本へ転職を考えていましたが、JobMatchのエージェントが全てサポートしてくれました。ビザの手続きから面接対策まで、本当に助かりました。",
   },
   {
-    name: '田中 美咲',
-    role: 'プロダクトマネージャー',
-    company: '大阪スタートアップ',
-    avatar: '田',
-    avatarColor: 'bg-pink-500',
-    text: 'AIマッチングの精度に驚きました。自分では気づかなかった求人を提案してくれて、希望年収より20%高いオファーをもらえました。',
+    name: "田中 美咲",
+    role: "プロダクトマネージャー",
+    company: "大阪スタートアップ",
+    avatar: "田",
+    avatarColor: "bg-pink-500",
+    text: "AIマッチングの精度に驚きました。自分では気づかなかった求人を提案してくれて、希望年収より20%高いオファーをもらえました。",
   },
   {
-    name: 'Kamol Rashidov',
-    role: 'インフラエンジニア',
-    company: 'リモートワーク',
-    avatar: 'K',
-    avatarColor: 'bg-emerald-500',
-    text: '日本語ができなくても応募できる求人が多く、英語・ロシア語対応のエージェントが丁寧にサポートしてくれました。今はフルリモートで働いています。',
+    name: "Kamol Rashidov",
+    role: "インフラエンジニア",
+    company: "リモートワーク",
+    avatar: "K",
+    avatarColor: "bg-emerald-500",
+    text: "日本語ができなくても応募できる求人が多く、英語・ロシア語対応のエージェントが丁寧にサポートしてくれました。今はフルリモートで働いています。",
   },
 ];
 
 const FEATURED_CATEGORIES = [
-  { label: 'IT・エンジニア', count: 1240, icon: '💻' },
-  { label: 'データサイエンス', count: 340, icon: '📊' },
-  { label: 'デザイン', count: 280, icon: '🎨' },
-  { label: 'マーケティング', count: 190, icon: '📣' },
-  { label: '製造・工場', count: 870, icon: '🏭' },
-  { label: '医療・介護', count: 560, icon: '🏥' },
+  { label: "IT・エンジニア", count: 1240, icon: "💻" },
+  { label: "データサイエンス", count: 340, icon: "📊" },
+  { label: "デザイン", count: 280, icon: "🎨" },
+  { label: "マーケティング", count: 190, icon: "📣" },
+  { label: "製造・工場", count: 870, icon: "🏭" },
+  { label: "医療・介護", count: 560, icon: "🏥" },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
       router.push(`/jobs?q=${encodeURIComponent(search.trim())}`);
     } else {
-      router.push('/jobs');
+      router.push("/jobs");
     }
   };
 
@@ -96,29 +97,37 @@ export default function HomePage() {
       <PublicHeader />
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-700 py-20">
+      <section className="relative isolate min-h-[calc(100svh-74px)] overflow-hidden bg-[#10233f] py-20 sm:py-28">
+        <Image
+          src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2200&q=85"
+          alt="国際チームが協働する職場"
+          fill
+          priority
+          className="absolute inset-0 -z-20 h-full w-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#10233f_0%,rgba(16,35,63,.94)_42%,rgba(16,35,63,.48)_100%)]" />
         {/* Background decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/5" />
           <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-white/5" />
         </div>
 
-        <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm text-indigo-100">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            日本・ウズベキスタン ✕ AIマッチング
+        <div className="relative mx-auto max-w-7xl px-5 text-left sm:px-8">
+          <div className="mb-6 inline-flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#d6e4fb]">
+            <span className="h-px w-8 bg-[#f0b429]" />
+            Japan ↔ Uzbekistan · AI matching
           </div>
-          <h1 className="mb-4 text-4xl font-extrabold leading-tight text-white sm:text-5xl">
-            あなたのキャリアを、<br />
-            <span className="text-indigo-200">AIが最適化する。</span>
+          <h1 className="mb-6 max-w-3xl text-left text-4xl font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-6xl">
+            国境を越えて、
+            <br />
+            <span className="text-[#f0b429]">キャリアの可能性</span>をひらく。
           </h1>
-          <p className="mb-8 text-lg text-indigo-200">
-            日本とウズベキスタンをつなぐ求人プラットフォーム。<br />
-            スキルと経験をもとに、あなたに合った仕事をAIが提案します。
+          <p className="mb-8 max-w-xl text-left text-base leading-8 text-[#d6e4fb] sm:text-lg">
+            日本とウズベキスタンの人材・企業を、信頼できるデータと人のサポートでつなぐ。
           </p>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} className="mx-auto max-w-2xl">
+          <form onSubmit={handleSearch} className="max-w-2xl">
             <div className="flex overflow-hidden rounded-2xl bg-white shadow-xl">
               <input
                 type="text"
@@ -136,7 +145,13 @@ export default function HomePage() {
             </div>
             <p className="mt-3 text-sm text-indigo-300">
               人気タグ：
-              {['React', 'Python', 'リモート', 'ビザサポート', '日本語不問'].map((tag) => (
+              {[
+                "React",
+                "Python",
+                "リモート",
+                "ビザサポート",
+                "日本語不問",
+              ].map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -157,8 +172,12 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {STATS.map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-3xl font-extrabold text-indigo-600">{stat.value}</p>
-                <p className="mt-1 text-sm font-semibold text-gray-800">{stat.label}</p>
+                <p className="text-3xl font-extrabold text-indigo-600">
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-gray-800">
+                  {stat.label}
+                </p>
                 <p className="text-xs text-gray-400">{stat.sublabel}</p>
               </div>
             ))}
@@ -180,8 +199,12 @@ export default function HomePage() {
                 className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 text-center transition-all hover:border-indigo-300 hover:shadow-sm"
               >
                 <span className="text-2xl">{cat.icon}</span>
-                <span className="text-xs font-semibold text-gray-800">{cat.label}</span>
-                <span className="text-xs text-gray-400">{cat.count.toLocaleString()}件</span>
+                <span className="text-xs font-semibold text-gray-800">
+                  {cat.label}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {cat.count.toLocaleString()}件
+                </span>
               </Link>
             ))}
           </div>
@@ -194,7 +217,9 @@ export default function HomePage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">新着求人</h2>
-              <p className="mt-1 text-sm text-gray-500">最新の求人情報をお届けします</p>
+              <p className="mt-1 text-sm text-gray-500">
+                最新の求人情報をお届けします
+              </p>
             </div>
             <Link
               href="/jobs"
@@ -227,13 +252,18 @@ export default function HomePage() {
                 <p className="mb-3 text-xs text-gray-500">{job.company.name}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {job.skills.slice(0, 3).map((skill) => (
-                    <span key={skill} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                    <span
+                      key={skill}
+                      className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                    >
                       {skill}
                     </span>
                   ))}
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{job.prefecture}</span>
+                  <span className="text-xs text-gray-400">
+                    {job.prefecture}
+                  </span>
                   {job.salaryMax && (
                     <span className="text-xs font-semibold text-indigo-600">
                       〜{(job.salaryMax / 10000).toFixed(0)}万円
@@ -249,18 +279,29 @@ export default function HomePage() {
       {/* ── How it works ── */}
       <section className="bg-gray-50 py-14">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="mb-2 text-center text-2xl font-bold text-gray-900">ご利用の流れ</h2>
+          <h2 className="mb-2 text-center text-2xl font-bold text-gray-900">
+            ご利用の流れ
+          </h2>
           <p className="mb-10 text-center text-sm text-gray-500">
             登録から内定まで、最短3分でスタートできます
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {HOW_IT_WORKS.map((item) => (
-              <div key={item.step} className="rounded-xl bg-white p-6 shadow-sm">
-                <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${item.color}`}>
+              <div
+                key={item.step}
+                className="rounded-xl bg-white p-6 shadow-sm"
+              >
+                <div
+                  className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${item.color}`}
+                >
                   {item.step}
                 </div>
-                <h3 className="mb-2 text-sm font-bold text-gray-900">{item.title}</h3>
-                <p className="text-xs leading-relaxed text-gray-500">{item.desc}</p>
+                <h3 className="mb-2 text-sm font-bold text-gray-900">
+                  {item.title}
+                </h3>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -270,26 +311,41 @@ export default function HomePage() {
       {/* ── Testimonials ── */}
       <section className="py-14">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="mb-2 text-center text-2xl font-bold text-gray-900">利用者の声</h2>
+          <h2 className="mb-2 text-center text-2xl font-bold text-gray-900">
+            利用者の声
+          </h2>
           <p className="mb-10 text-center text-sm text-gray-500">
             JobMatchで夢を実現した方々のストーリー
           </p>
           <div className="grid gap-6 sm:grid-cols-3">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div
+                key={t.name}
+                className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm"
+              >
                 <div className="mb-4 flex items-center gap-3">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${t.avatarColor}`}>
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${t.avatarColor}`}
+                  >
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-400">{t.role} · {t.company}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {t.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {t.role} · {t.company}
+                    </p>
                   </div>
                 </div>
                 <div className="mb-3 flex text-yellow-400">
-                  {'★★★★★'.split('').map((s, i) => <span key={i}>{s}</span>)}
+                  {"★★★★★".split("").map((s, i) => (
+                    <span key={i}>{s}</span>
+                  ))}
                 </div>
-                <p className="text-xs leading-relaxed text-gray-600">{t.text}</p>
+                <p className="text-xs leading-relaxed text-gray-600">
+                  {t.text}
+                </p>
               </div>
             ))}
           </div>
@@ -314,20 +370,50 @@ export default function HomePage() {
                 </p>
                 <div className="flex flex-wrap justify-center gap-3 sm:justify-start">
                   <div className="flex items-center gap-1.5 text-xs text-blue-200">
-                    <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-4 w-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     専任エージェントサポート
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-blue-200">
-                    <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-4 w-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     AIマッチングで効率採用
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-blue-200">
-                    <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-4 w-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     ビザ・外国人採用対応
                   </div>
@@ -340,7 +426,9 @@ export default function HomePage() {
                 >
                   企業登録する（無料）
                 </Link>
-                <p className="text-xs text-blue-300">エージェントの審査後に採用活動開始</p>
+                <p className="text-xs text-blue-300">
+                  エージェントの審査後に採用活動開始
+                </p>
               </div>
             </div>
           </div>
@@ -378,15 +466,27 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white">J</div>
-              <span className="text-sm font-bold text-gray-900">JobMatch Platform</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white">
+                J
+              </div>
+              <span className="text-sm font-bold text-gray-900">
+                JobMatch Platform
+              </span>
             </div>
             <div className="flex gap-6 text-xs text-gray-400">
-              <Link href="#" className="hover:text-gray-700">利用規約</Link>
-              <Link href="#" className="hover:text-gray-700">プライバシーポリシー</Link>
-              <Link href="#" className="hover:text-gray-700">お問い合わせ</Link>
+              <Link href="#" className="hover:text-gray-700">
+                利用規約
+              </Link>
+              <Link href="#" className="hover:text-gray-700">
+                プライバシーポリシー
+              </Link>
+              <Link href="#" className="hover:text-gray-700">
+                お問い合わせ
+              </Link>
             </div>
-            <p className="text-xs text-gray-400">© 2026 JobMatch Platform. All rights reserved.</p>
+            <p className="text-xs text-gray-400">
+              © 2026 JobMatch Platform. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

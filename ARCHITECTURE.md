@@ -2,6 +2,11 @@
 
 > This document defines the architecture decisions, coding standards, and business rules for the JobMatch Platform. All contributors must follow these rules without exceptions.
 
+> **Document role:** this file contains the established system rules. Start at
+> [`docs/README.md`](./docs/README.md) for the documentation map, current state,
+> target architecture, security/AI plans, and delivery roadmap. Proposed items in
+> this document are not implementation claims.
+
 ---
 
 ## 1. Architecture Overview
@@ -22,7 +27,10 @@ apps/api/src/modules/
 └── admin/        → System management + moderation
 ```
 
-**Future extraction candidates** (when traffic justifies): matching engine, AI parsing, notifications, analytics.
+**Future extraction candidates** (when traffic justifies): matching engine,
+provider-specific AI parsing workers, notifications, analytics. The current
+modular monolith owns AI audit metadata and the resume extraction proposal state
+machine.
 
 ---
 
@@ -294,12 +302,40 @@ These operations **must** be async via Bull queue — never block the HTTP respo
 
 | Trigger | Queue | Action |
 |---|---|---|
-| Resume uploaded | `resume-parse` | AI parser → save structured data → generate embedding |
+| Resume extraction requested | `UNKNOWN` | Publish `ResumeParsingRequested`; a future parser proposes structured data |
 | Application submitted | `notification` | Email to agent + chatbot notification |
 | Application status changed | `notification` | Email + in-app to candidate |
 | Company approved/rejected | `notification` | Email to company |
 | PDF resume requested | `pdf-generation` | Generate → save to S3 |
 | Analytics event | `analytics` | Write to analytics DB |
+
+Business state changes that require asynchronous delivery write an `outbox_events`
+record in the same database transaction. Queue publishers may retry delivery;
+consumers use `processed_messages` for idempotency. Exactly-once delivery is not
+assumed.
+
+AI calls record metadata in `ai_executions`. Raw prompts, resumes, job descriptions,
+and model responses are not stored in that audit table.
+
+The outbox dispatcher uses compare-and-set claims, bounded exponential retry, and
+stale-claim recovery. Its concrete broker transport and scheduler are **UNKNOWN**.
+
+Resume extraction is a human-in-the-loop workflow:
+
+1. `POST /api/resume/extractions` records an object key, document SHA-256, and
+   idempotency key, then writes `ResumeParsingRequested` in the same transaction.
+2. A future consumer records AI metadata and a schema-validated proposal.
+3. Only the owning candidate can confirm or reject the proposal.
+4. Confirmation replaces the structured resume sections and writes
+   `ResumeExtractionConfirmed` in one transaction.
+
+The object-storage upload adapter, malware/file-content validation, parser
+provider/model/prompt, and broker consumer are **UNKNOWN**. The API deliberately
+accepts an object key rather than a public URL.
+
+The implementation-ready current/target design, bounded-context ownership,
+failure paths, infrastructure evidence, and decision blockers are documented in
+[`docs/architecture/ai-resume-processing.md`](./docs/architecture/ai-resume-processing.md).
 
 ---
 

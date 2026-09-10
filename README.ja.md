@@ -1,5 +1,7 @@
 # JobMatch プラットフォーム
 
+[![CI](https://github.com/sherzot/jobmatcher-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/sherzot/jobmatcher-platform/actions/workflows/ci.yml)
+
 **AI支援型キャリアオペレーティングシステム** — 日本（JP）・ウズベキスタン（UZ）
 
 > 求人マーケットプレイス・ATS（採用管理）・AI マッチング・書類自動化・採用ツール・候補者キャリア管理を統合した本番品質のプラットフォーム
@@ -91,7 +93,7 @@ cp .env.example .env
 
 ```bash
 npm run docker:dev
-# MySQL :3307 | Redis :6379 | MinIO :9000 | phpMyAdmin :8080
+# MySQL :3306 | Redis :6379 | MinIO :9000 | phpMyAdmin :8080
 ```
 
 ### 4. スキーマ反映＆シード

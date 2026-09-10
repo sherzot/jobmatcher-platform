@@ -18,6 +18,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import type { JwtPayload } from './types/jwt-payload.type';
 
 const COOKIE_OPTIONS = {
@@ -27,8 +28,8 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-const ACCESS_TOKEN_MAX_AGE  = 15 * 60 * 1000;           // 15 min
-const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;  // 7 days
+const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000; // 15 min
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @ApiTags('auth')
 @Controller('auth')
@@ -56,10 +57,14 @@ export class AuthController {
   // ── POST /auth/login ──────────────────────────────────────
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'ログイン（全ロール共通）' })
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.login(dto);
 
     res.cookie('access_token', result.accessToken, {

@@ -1,102 +1,175 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { MOCK_AGENT_COMPANIES } from '@/lib/mock/agent';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Suspense } from "react";
+import { MOCK_AGENT_COMPANIES } from "@/lib/mock/agent";
+import { cn } from "@/lib/utils";
+import { api } from "@/lib/api/client";
 
 const JOB_TYPES = [
-  { value: 'FULL_TIME', label: '正社員' },
-  { value: 'CONTRACT', label: '契約社員' },
-  { value: 'PART_TIME', label: 'パートタイム' },
-  { value: 'INTERNSHIP', label: 'インターン' },
+  { value: "FULL_TIME", label: "正社員" },
+  { value: "CONTRACT", label: "契約社員" },
+  { value: "PART_TIME", label: "パートタイム" },
+  { value: "INTERNSHIP", label: "インターン" },
 ];
 
 const WORK_LOCATIONS = [
-  { value: 'ONSITE', label: 'オフィス勤務' },
-  { value: 'REMOTE', label: 'フルリモート' },
-  { value: 'HYBRID', label: 'ハイブリッド' },
+  { value: "ONSITE", label: "オフィス勤務" },
+  { value: "REMOTE", label: "フルリモート" },
+  { value: "HYBRID", label: "ハイブリッド" },
 ];
 
 const JAPANESE_LEVELS = [
-  { value: 'NONE', label: '不問' },
-  { value: 'N5', label: 'JLPT N5' },
-  { value: 'N4', label: 'JLPT N4' },
-  { value: 'N3', label: 'JLPT N3' },
-  { value: 'N2', label: 'JLPT N2' },
-  { value: 'N1', label: 'JLPT N1' },
-  { value: 'BUSINESS', label: 'ビジネスレベル' },
-  { value: 'NATIVE', label: 'ネイティブ' },
+  { value: "NONE", label: "不問" },
+  { value: "N5", label: "JLPT N5" },
+  { value: "N4", label: "JLPT N4" },
+  { value: "N3", label: "JLPT N3" },
+  { value: "N2", label: "JLPT N2" },
+  { value: "N1", label: "JLPT N1" },
+  { value: "BUSINESS", label: "ビジネスレベル" },
+  { value: "NATIVE", label: "ネイティブ" },
 ];
 
 function NewJobForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedCompanyId = searchParams.get('companyId') ?? '';
+  const preselectedCompanyId = searchParams.get("companyId") ?? "";
 
-  const [step, setStep] = useState<'select-company' | 'fill-form'>(
-    preselectedCompanyId ? 'fill-form' : 'select-company',
+  const [step, setStep] = useState<"select-company" | "fill-form">(
+    preselectedCompanyId ? "fill-form" : "select-company",
   );
-  const [selectedCompanyId, setSelectedCompanyId] = useState(preselectedCompanyId);
-  const [skillInput, setSkillInput] = useState('');
+  const [selectedCompanyId, setSelectedCompanyId] =
+    useState(preselectedCompanyId);
+  const [companies, setCompanies] = useState(MOCK_AGENT_COMPANIES);
+  const [skillInput, setSkillInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState({
-    title: '',
-    jobType: 'FULL_TIME',
-    workLocation: 'HYBRID',
-    prefecture: '',
-    city: '',
-    salaryMin: '',
-    salaryMax: '',
-    japaneseLevel: 'NONE',
+    title: "",
+    jobType: "FULL_TIME",
+    workLocation: "HYBRID",
+    prefecture: "",
+    city: "",
+    salaryMin: "",
+    salaryMax: "",
+    salaryType: "ANNUAL",
+    japaneseLevel: "NONE",
     visaSponsorship: false,
-    minExperience: '',
+    minExperience: "",
     skills: [] as string[],
-    description: '',
-    requirements: '',
-    benefits: '',
+    description: "",
+    requirements: "",
+    benefits: "",
     publishNow: false,
   });
 
-  const selectedCompany = MOCK_AGENT_COMPANIES.find(c => c.id === selectedCompanyId);
+  useEffect(() => {
+    api
+      .agentCompanies()
+      .then((records) => {
+        setCompanies(
+          records.map(({ company }) => ({
+            id: String(company.id),
+            code: company.companyCode,
+            name: company.name,
+            nameEn: company.nameEn ?? "",
+            logoInitial: company.name.charAt(0),
+            logoColor: "bg-indigo-600",
+            industry: company.industry ?? "—",
+            employeeCount: company.employeeCount ?? "—",
+            prefecture: company.prefecture ?? "—",
+            city: "",
+            websiteUrl: "",
+            description: "",
+            isActive: true,
+            isVerified: company.status === "APPROVED",
+            activeJobCount: company.jobs?.length ?? 0,
+            totalApplications:
+              company.jobs?.reduce((sum, job) => sum + job.applyCount, 0) ?? 0,
+            createdAt: company.createdAt,
+          })),
+        );
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value, type } = e.target;
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
   };
 
   const addSkill = () => {
     const s = skillInput.trim();
     if (!s || form.skills.includes(s)) return;
-    setForm(f => ({ ...f, skills: [...f.skills, s] }));
-    setSkillInput('');
+    setForm((f) => ({ ...f, skills: [...f.skills, s] }));
+    setSkillInput("");
   };
 
   const removeSkill = (skill: string) => {
-    setForm(f => ({ ...f, skills: f.skills.filter(s => s !== skill) }));
+    setForm((f) => ({ ...f, skills: f.skills.filter((s) => s !== skill) }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock: redirect back to jobs list
-    router.push('/agent/jobs');
+    if (!selectedCompanyId || isSubmitting) return;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const { publishNow, ...jobForm } = form;
+      void publishNow;
+      await api.createJob({
+        ...jobForm,
+        companyId: Number(selectedCompanyId),
+        salaryMin: form.salaryMin ? Number(form.salaryMin) : undefined,
+        salaryMax: form.salaryMax ? Number(form.salaryMax) : undefined,
+        minExperience: form.minExperience
+          ? Number(form.minExperience)
+          : undefined,
+      });
+      router.push("/agent/jobs");
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "求人の作成に失敗しました",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Step 1: Company selection ─────────────────────────────
 
-  if (step === 'select-company') {
+  if (step === "select-company") {
     return (
       <div className="p-6 lg:p-8">
         <div className="mb-6">
-          <Link href="/agent/jobs" className="mb-3 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <Link
+            href="/agent/jobs"
+            className="mb-3 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             求人一覧に戻る
           </Link>
@@ -108,11 +181,23 @@ function NewJobForm() {
 
         {/* Important note */}
         <div className="mb-6 flex gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
-          <svg className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="mt-0.5 h-5 w-5 shrink-0 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <div>
-            <p className="text-sm font-medium text-blue-800">求人は必ず企業に紐づけます</p>
+            <p className="text-sm font-medium text-blue-800">
+              求人は必ず企業に紐づけます
+            </p>
             <p className="mt-0.5 text-xs text-blue-600">
               あなたが担当する企業の求人のみ作成できます。新しい企業を追加する場合は先に「担当企業」から登録してください。
             </p>
@@ -121,31 +206,37 @@ function NewJobForm() {
 
         {/* Company grid */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {MOCK_AGENT_COMPANIES.filter(c => c.isActive).map((company) => (
+          {MOCK_AGENT_COMPANIES.filter((c) => c.isActive).map((company) => (
             <button
               key={company.id}
               onClick={() => {
                 setSelectedCompanyId(company.id);
-                setStep('fill-form');
+                setStep("fill-form");
               }}
               className={cn(
-                'group rounded-xl border-2 bg-white p-5 text-left transition-all hover:border-violet-400 hover:shadow-md',
+                "group rounded-xl border-2 bg-white p-5 text-left transition-all hover:border-violet-400 hover:shadow-md",
                 selectedCompanyId === company.id
-                  ? 'border-violet-500'
-                  : 'border-gray-200',
+                  ? "border-violet-500"
+                  : "border-gray-200",
               )}
             >
               <div className="flex items-start gap-3">
-                <div className={cn(
-                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white',
-                  company.logoColor,
-                )}>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white",
+                    company.logoColor,
+                  )}
+                >
                   {company.logoInitial}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 group-hover:text-violet-700">{company.name}</p>
+                  <p className="font-semibold text-gray-900 group-hover:text-violet-700">
+                    {company.name}
+                  </p>
                   <p className="text-xs text-gray-400">{company.industry}</p>
-                  <p className="text-xs text-gray-400">{company.prefecture} · {company.employeeCount}</p>
+                  <p className="text-xs text-gray-400">
+                    {company.prefecture} · {company.employeeCount}
+                  </p>
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
@@ -158,10 +249,13 @@ function NewJobForm() {
           ))}
         </div>
 
-        {MOCK_AGENT_COMPANIES.filter(c => c.isActive).length === 0 && (
+        {MOCK_AGENT_COMPANIES.filter((c) => c.isActive).length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-300 py-16 text-center">
             <p className="text-gray-400">担当企業がありません</p>
-            <Link href="/agent/companies" className="mt-2 inline-block text-sm font-medium text-violet-600 hover:underline">
+            <Link
+              href="/agent/companies"
+              className="mt-2 inline-block text-sm font-medium text-violet-600 hover:underline"
+            >
               企業を追加する →
             </Link>
           </div>
@@ -176,11 +270,21 @@ function NewJobForm() {
     <div className="p-6 lg:p-8">
       <div className="mb-6">
         <button
-          onClick={() => setStep('select-company')}
+          onClick={() => setStep("select-company")}
           className="mb-3 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           企業選択に戻る
         </button>
@@ -190,18 +294,24 @@ function NewJobForm() {
       {/* Selected company banner */}
       {selectedCompany && (
         <div className="mb-5 flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
-          <div className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white',
-            selectedCompany.logoColor,
-          )}>
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white",
+              selectedCompany.logoColor,
+            )}
+          >
             {selectedCompany.logoInitial}
           </div>
           <div>
-            <p className="text-sm font-semibold text-violet-900">{selectedCompany.name}</p>
-            <p className="text-xs text-violet-600">{selectedCompany.industry} · {selectedCompany.prefecture}</p>
+            <p className="text-sm font-semibold text-violet-900">
+              {selectedCompany.name}
+            </p>
+            <p className="text-xs text-violet-600">
+              {selectedCompany.industry} · {selectedCompany.prefecture}
+            </p>
           </div>
           <button
-            onClick={() => setStep('select-company')}
+            onClick={() => setStep("select-company")}
             className="ml-auto text-xs text-violet-500 underline hover:text-violet-700"
           >
             変更
@@ -210,42 +320,86 @@ function NewJobForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {submitError && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {submitError}
+          </div>
+        )}
         {/* Title */}
         <div className="rounded-xl border border-gray-200 bg-white p-5">
           <h2 className="mb-4 text-sm font-semibold text-gray-900">基本情報</h2>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">求人タイトル *</label>
-              <input name="title" required value={form.title} onChange={handleChange}
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                求人タイトル *
+              </label>
+              <input
+                name="title"
+                required
+                value={form.title}
+                onChange={handleChange}
                 placeholder="例: シニアフロントエンドエンジニア（React/TypeScript）"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-500">雇用形態 *</label>
-                <select name="jobType" value={form.jobType} onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none">
-                  {JOB_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                  雇用形態 *
+                </label>
+                <select
+                  name="jobType"
+                  value={form.jobType}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+                >
+                  {JOB_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-500">勤務スタイル *</label>
-                <select name="workLocation" value={form.workLocation} onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none">
-                  {WORK_LOCATIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                  勤務スタイル *
+                </label>
+                <select
+                  name="workLocation"
+                  value={form.workLocation}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+                >
+                  {WORK_LOCATIONS.map((l) => (
+                    <option key={l.value} value={l.value}>
+                      {l.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-500">都道府県</label>
-                <input name="prefecture" value={form.prefecture} onChange={handleChange}
+                <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                  都道府県
+                </label>
+                <input
+                  name="prefecture"
+                  value={form.prefecture}
+                  onChange={handleChange}
                   placeholder="東京都"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+                />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-gray-500">市区町村</label>
-                <input name="city" value={form.city} onChange={handleChange}
+                <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                  市区町村
+                </label>
+                <input
+                  name="city"
+                  value={form.city}
+                  onChange={handleChange}
                   placeholder="渋谷区"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+                />
               </div>
             </div>
           </div>
@@ -253,38 +407,95 @@ function NewJobForm() {
 
         {/* Salary & Requirements */}
         <div className="rounded-xl border border-gray-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">条件・要件</h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">
+            条件・要件
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">年収下限（万円）</label>
-              <input type="number" name="salaryMin" value={form.salaryMin} onChange={handleChange}
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                年収下限（万円）
+              </label>
+              <input
+                type="number"
+                name="salaryMin"
+                value={form.salaryMin}
+                onChange={handleChange}
                 placeholder="500"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">年収上限（万円）</label>
-              <input type="number" name="salaryMax" value={form.salaryMax} onChange={handleChange}
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                年収上限（万円）
+              </label>
+              <input
+                type="number"
+                name="salaryMax"
+                value={form.salaryMax}
+                onChange={handleChange}
                 placeholder="900"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">日本語レベル</label>
-              <select name="japaneseLevel" value={form.japaneseLevel} onChange={handleChange}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none">
-                {JAPANESE_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                給与タイプ *
+              </label>
+              <select
+                name="salaryType"
+                value={form.salaryType}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              >
+                <option value="HOURLY">時給</option>
+                <option value="MONTHLY">月給</option>
+                <option value="ANNUAL">年収</option>
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">最低経験年数</label>
-              <input type="number" name="minExperience" value={form.minExperience} onChange={handleChange}
-                min={0} placeholder="3"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                日本語レベル
+              </label>
+              <select
+                name="japaneseLevel"
+                value={form.japaneseLevel}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              >
+                {JAPANESE_LEVELS.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                最低経験年数
+              </label>
+              <input
+                type="number"
+                name="minExperience"
+                value={form.minExperience}
+                onChange={handleChange}
+                min={0}
+                placeholder="3"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div className="col-span-2 flex items-center gap-2">
-              <input type="checkbox" id="visaSponsorship" name="visaSponsorship"
-                checked={form.visaSponsorship} onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-violet-600" />
-              <label htmlFor="visaSponsorship" className="text-sm text-gray-600">
+              <input
+                type="checkbox"
+                id="visaSponsorship"
+                name="visaSponsorship"
+                checked={form.visaSponsorship}
+                onChange={handleChange}
+                className="h-4 w-4 rounded border-gray-300 text-violet-600"
+              />
+              <label
+                htmlFor="visaSponsorship"
+                className="text-sm text-gray-600"
+              >
                 ビザサポートあり（外国籍候補者向けに表示されます）
               </label>
             </div>
@@ -292,28 +503,42 @@ function NewJobForm() {
 
           {/* Skills */}
           <div className="mt-4">
-            <label className="mb-1.5 block text-xs font-medium text-gray-500">必要スキル</label>
+            <label className="mb-1.5 block text-xs font-medium text-gray-500">
+              必要スキル
+            </label>
             <div className="flex gap-2">
               <input
                 value={skillInput}
-                onChange={e => setSkillInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addSkill())
+                }
                 placeholder="スキルを入力（例: React）"
                 className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
               />
-              <button type="button" onClick={addSkill}
-                className="rounded-lg bg-violet-600 px-4 text-sm font-medium text-white hover:bg-violet-700">
+              <button
+                type="button"
+                onClick={addSkill}
+                className="rounded-lg bg-violet-600 px-4 text-sm font-medium text-white hover:bg-violet-700"
+              >
                 追加
               </button>
             </div>
             {form.skills.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {form.skills.map(skill => (
-                  <span key={skill}
-                    className="flex items-center gap-1.5 rounded-full bg-violet-50 pl-3 pr-2 py-1 text-sm font-medium text-violet-700">
+                {form.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="flex items-center gap-1.5 rounded-full bg-violet-50 pl-3 pr-2 py-1 text-sm font-medium text-violet-700"
+                  >
                     {skill}
-                    <button type="button" onClick={() => removeSkill(skill)}
-                      className="text-violet-300 hover:text-violet-600">×</button>
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(skill)}
+                      className="text-violet-300 hover:text-violet-600"
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
@@ -326,22 +551,44 @@ function NewJobForm() {
           <h2 className="mb-4 text-sm font-semibold text-gray-900">求人詳細</h2>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">仕事内容 *</label>
-              <textarea name="description" required value={form.description} onChange={handleChange}
-                rows={6} placeholder="業務内容、チームの雰囲気、求める人物像など..."
-                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                仕事内容 *
+              </label>
+              <textarea
+                name="description"
+                required
+                value={form.description}
+                onChange={handleChange}
+                rows={6}
+                placeholder="業務内容、チームの雰囲気、求める人物像など..."
+                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">応募要件</label>
-              <textarea name="requirements" value={form.requirements} onChange={handleChange}
-                rows={4} placeholder="必須要件・歓迎要件..."
-                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                応募要件
+              </label>
+              <textarea
+                name="requirements"
+                value={form.requirements}
+                onChange={handleChange}
+                rows={4}
+                placeholder="必須要件・歓迎要件..."
+                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">待遇・福利厚生</label>
-              <textarea name="benefits" value={form.benefits} onChange={handleChange}
-                rows={3} placeholder="給与・休暇・リモートワーク制度など..."
-                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none" />
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                待遇・福利厚生
+              </label>
+              <textarea
+                name="benefits"
+                value={form.benefits}
+                onChange={handleChange}
+                rows={3}
+                placeholder="給与・休暇・リモートワーク制度など..."
+                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none"
+              />
             </div>
           </div>
         </div>
@@ -349,24 +596,42 @@ function NewJobForm() {
         {/* Publish option */}
         <div className="rounded-xl border border-gray-200 bg-white p-5">
           <label className="flex items-start gap-3">
-            <input type="checkbox" name="publishNow" checked={form.publishNow} onChange={handleChange}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600" />
+            <input
+              type="checkbox"
+              name="publishNow"
+              checked={form.publishNow}
+              onChange={handleChange}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-violet-600"
+            />
             <div>
-              <p className="text-sm font-medium text-gray-900">作成後すぐに公開する</p>
-              <p className="text-xs text-gray-400">チェックを外すと下書きとして保存されます</p>
+              <p className="text-sm font-medium text-gray-900">
+                作成後すぐに公開する
+              </p>
+              <p className="text-xs text-gray-400">
+                チェックを外すと下書きとして保存されます
+              </p>
             </div>
           </label>
         </div>
 
         {/* Submit */}
         <div className="flex gap-3">
-          <Link href="/agent/jobs"
-            className="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-medium text-gray-600 hover:bg-gray-50">
+          <Link
+            href="/agent/jobs"
+            className="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
             キャンセル
           </Link>
-          <button type="submit"
-            className="flex-1 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700">
-            {form.publishNow ? '作成して公開する' : '下書きとして保存'}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting
+              ? "保存中..."
+              : form.publishNow
+                ? "作成して公開する"
+                : "下書きとして保存"}
           </button>
         </div>
       </form>

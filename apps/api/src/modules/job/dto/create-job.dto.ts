@@ -10,9 +10,21 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { JapaneseLevel, JobType, SalaryType, WorkLocation } from '@prisma/client';
+import {
+  JapaneseLevel,
+  JobType,
+  SalaryType,
+  WorkLocation,
+} from '@prisma/client';
 
 export class CreateJobDto {
+  @ApiPropertyOptional({
+    description: 'Agent creates job for assigned company',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  companyId?: number;
   @ApiProperty({ example: 'バックエンドエンジニア（TypeScript / NestJS）' })
   @IsNotEmpty()
   @IsString()

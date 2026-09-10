@@ -1,13 +1,11 @@
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { JapaneseLevel, JobType, SalaryType, WorkLocation } from '@prisma/client';
+import {
+  JapaneseLevel,
+  JobType,
+  SalaryType,
+  WorkLocation,
+} from '@prisma/client';
 
 export class SearchJobsDto {
   @ApiPropertyOptional({ description: 'Full-text search query' })

@@ -15,6 +15,11 @@ import { RegisterCandidateDto } from './dto/register-candidate.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './types/jwt-payload.type';
+import {
+  createTemporaryBusinessCode,
+  formatCandidateCode,
+  formatCompanyCode,
+} from '../../common/domain/business-code';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -34,33 +39,40 @@ export class AuthService {
     await this.assertEmailUnique(dto.email);
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const verificationCode = this.generateVerificationCode();
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        password: hashedPassword,
-        role: UserRole.CANDIDATE,
-        status: UserStatus.PENDING_VERIFICATION,
-        candidate: {
-          create: {
-            lastName: dto.lastName,
-            firstName: dto.firstName,
+    const user = await this.prisma.$transaction(async (transaction) => {
+      const created = await transaction.user.create({
+        data: {
+          email: dto.email.toLowerCase(),
+          password: hashedPassword,
+          role: UserRole.CANDIDATE,
+          status: UserStatus.PENDING_VERIFICATION,
+          candidate: {
+            create: {
+              userCode: createTemporaryBusinessCode(12),
+              lastName: dto.lastName,
+              firstName: dto.firstName,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        candidate: { select: { id: true, userCode: true } },
-      },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          candidate: { select: { id: true, userCode: true } },
+        },
+      });
+
+      const candidate = await transaction.candidate.update({
+        where: { id: created.candidate!.id },
+        data: { userCode: formatCandidateCode(created.candidate!.id) },
+        select: { id: true, userCode: true },
+      });
+
+      return { ...created, candidate };
     });
 
-    // TODO: send verification email with verificationCode (notification module)
-    this.logger.log(
-      `Candidate registered: ${user.email} — verification code: ${verificationCode}`,
-    );
+    this.logger.log(`Candidate registered: userId=${user.id}`);
 
     return {
       message: '登録が完了しました。メールをご確認ください。',
@@ -77,36 +89,47 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        password: hashedPassword,
-        role: UserRole.COMPANY,
-        status: UserStatus.PENDING_VERIFICATION,
-        company: {
-          create: {
-            name: dto.companyName,
-            nameEn: dto.companyNameEn,
-            industry: dto.industry,
-            prefecture: dto.prefecture,
-            businessRegNumber: dto.businessRegNumber,
-            registrationNote: dto.registrationNote,
-            status: CompanyStatus.PENDING_APPROVAL,
-            isActive: false,
+    const user = await this.prisma.$transaction(async (transaction) => {
+      const created = await transaction.user.create({
+        data: {
+          email: dto.email.toLowerCase(),
+          password: hashedPassword,
+          role: UserRole.COMPANY,
+          status: UserStatus.PENDING_VERIFICATION,
+          company: {
+            create: {
+              companyCode: createTemporaryBusinessCode(12),
+              name: dto.companyName,
+              nameEn: dto.companyNameEn,
+              industry: dto.industry,
+              prefecture: dto.prefecture,
+              businessRegNumber: dto.businessRegNumber,
+              registrationNote: dto.registrationNote,
+              status: CompanyStatus.PENDING_APPROVAL,
+              isActive: false,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        company: { select: { id: true, companyCode: true, name: true, status: true } },
-      },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          company: {
+            select: { id: true, companyCode: true, name: true, status: true },
+          },
+        },
+      });
+
+      const company = await transaction.company.update({
+        where: { id: created.company!.id },
+        data: { companyCode: formatCompanyCode(created.company!.id) },
+        select: { id: true, companyCode: true, name: true, status: true },
+      });
+
+      return { ...created, company };
     });
 
-    this.logger.log(`Company registered: ${user.email} — awaiting agent approval`);
-
-    // TODO: send notification to all agents (notification module)
+    this.logger.log(`Company registered: userId=${user.id}`);
 
     return {
       message:
@@ -130,9 +153,9 @@ export class AuthService {
         status: true,
         emailVerifiedAt: true,
         candidate: { select: { userCode: true } },
-        company:   { select: { companyCode: true, status: true } },
-        agent:     { select: { agentCode: true } },
-        admin:     { select: { adminCode: true } },
+        company: { select: { companyCode: true, status: true } },
+        agent: { select: { agentCode: true } },
+        admin: { select: { adminCode: true } },
       },
     });
 
@@ -157,6 +180,12 @@ export class AuthService {
         message: 'このアカウントは停止されています。',
       });
     }
+    if (user.status === UserStatus.INACTIVE) {
+      throw new ForbiddenException({
+        code: 'ACCOUNT_INACTIVE',
+        message: 'このアカウントは無効化されています。',
+      });
+    }
 
     // Company must be approved by agent before login
     if (user.role === UserRole.COMPANY) {
@@ -171,7 +200,14 @@ export class AuthService {
       if (companyStatus === CompanyStatus.REJECTED) {
         throw new ForbiddenException({
           code: 'COMPANY_REJECTED',
-          message: '登録が承認されませんでした。詳細はサポートにお問い合わせください。',
+          message:
+            '登録が承認されませんでした。詳細はサポートにお問い合わせください。',
+        });
+      }
+      if (companyStatus === CompanyStatus.SUSPENDED) {
+        throw new ForbiddenException({
+          code: 'COMPANY_SUSPENDED',
+          message: 'この会社アカウントは停止されています。',
         });
       }
     }
@@ -282,7 +318,10 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new BadRequestException({ code: 'NOT_FOUND', message: 'ユーザーが見つかりません。' });
+      throw new BadRequestException({
+        code: 'NOT_FOUND',
+        message: 'ユーザーが見つかりません。',
+      });
     }
 
     if (user.emailVerifiedAt) {
@@ -298,7 +337,9 @@ export class AuthService {
         emailVerifiedAt: new Date(),
         // Candidates become ACTIVE immediately; companies stay PENDING_VERIFICATION until agent approves
         status:
-          user.role === UserRole.CANDIDATE ? UserStatus.ACTIVE : UserStatus.PENDING_VERIFICATION,
+          user.role === UserRole.CANDIDATE
+            ? UserStatus.ACTIVE
+            : UserStatus.PENDING_VERIFICATION,
       },
     });
   }
@@ -308,15 +349,19 @@ export class AuthService {
   private resolveBusinessCode(user: {
     role: UserRole;
     candidate?: { userCode: string } | null;
-    company?:   { companyCode: string } | null;
-    agent?:     { agentCode: string } | null;
-    admin?:     { adminCode: string } | null;
+    company?: { companyCode: string } | null;
+    agent?: { agentCode: string } | null;
+    admin?: { adminCode: string } | null;
   }): string {
     switch (user.role) {
-      case UserRole.CANDIDATE: return user.candidate?.userCode ?? '';
-      case UserRole.COMPANY:   return user.company?.companyCode ?? '';
-      case UserRole.AGENT:     return user.agent?.agentCode ?? '';
-      case UserRole.ADMIN:     return user.admin?.adminCode ?? '';
+      case UserRole.CANDIDATE:
+        return user.candidate?.userCode ?? '';
+      case UserRole.COMPANY:
+        return user.company?.companyCode ?? '';
+      case UserRole.AGENT:
+        return user.agent?.agentCode ?? '';
+      case UserRole.ADMIN:
+        return user.admin?.adminCode ?? '';
     }
   }
 
@@ -335,18 +380,18 @@ export class AuthService {
   private signAccessToken(payload: JwtPayload): Promise<string> {
     return this.jwt.signAsync(payload, {
       secret: this.config.get<string>('jwt.accessSecret'),
-      expiresIn: this.config.get<string>('jwt.accessExpiresIn') as unknown as number,
+      expiresIn: this.config.get<string>(
+        'jwt.accessExpiresIn',
+      ) as unknown as number,
     });
   }
 
   private signRefreshToken(payload: JwtPayload): Promise<string> {
     return this.jwt.signAsync(payload, {
       secret: this.config.get<string>('jwt.refreshSecret'),
-      expiresIn: this.config.get<string>('jwt.refreshExpiresIn') as unknown as number,
+      expiresIn: this.config.get<string>(
+        'jwt.refreshExpiresIn',
+      ) as unknown as number,
     });
-  }
-
-  private generateVerificationCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 }

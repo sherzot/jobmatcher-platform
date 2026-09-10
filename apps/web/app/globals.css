@@ -1,13 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #111827;
+  --background: #f7f8f6;
+  --foreground: #10233f;
+  --navy: #10233f;
+  --ultramarine: #1456d9;
+  --saffron: #f0b429;
+  --japan-red: #c9233f;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    Inter,
+    "Noto Sans JP",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #d9e6ff;
+  color: var(--navy);
 }

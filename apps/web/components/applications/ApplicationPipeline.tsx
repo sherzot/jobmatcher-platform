@@ -11,7 +11,6 @@ interface ApplicationPipelineProps {
 
 export function ApplicationPipeline({ currentStatus }: ApplicationPipelineProps) {
   const isTerminal = currentStatus === 'REJECTED' || currentStatus === 'WITHDRAWN';
-  const isAccepted = currentStatus === 'ACCEPTED' || currentStatus === 'OFFER';
 
   if (isTerminal) {
     return (

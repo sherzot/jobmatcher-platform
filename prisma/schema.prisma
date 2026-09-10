@@ -33,26 +33,26 @@ enum UserStatus {
 
 /// Company registration approval status (set by Agent)
 enum CompanyStatus {
-  PENDING_APPROVAL  // Registered, waiting agent review
-  APPROVED          // Agent approved — can login and operate
-  REJECTED          // Agent rejected — must re-apply or contact support
-  SUSPENDED         // Suspended by Admin
+  PENDING_APPROVAL // Registered, waiting agent review
+  APPROVED // Agent approved — can login and operate
+  REJECTED // Agent rejected — must re-apply or contact support
+  SUSPENDED // Suspended by Admin
 }
 
 enum JobStatus {
   DRAFT
-  PENDING_REVIEW  // Company submitted, waiting agent approval
+  PENDING_REVIEW // Company submitted, waiting agent approval
   ACTIVE
   PAUSED
   CLOSED
-  REJECTED        // Agent rejected — company must revise
+  REJECTED // Agent rejected — company must revise
   DELETED
 }
 
 enum SalaryType {
-  HOURLY    // 時給
-  MONTHLY   // 月給
-  ANNUAL    // 年収
+  HOURLY // 時給
+  MONTHLY // 月給
+  ANNUAL // 年収
 }
 
 enum JobType {
@@ -123,10 +123,43 @@ enum NotificationType {
   NEW_JOB_MATCH
   INTERVIEW_SCHEDULED
   OFFER_RECEIVED
-  COMPANY_REGISTRATION         // Agent notified: new company pending approval
-  COMPANY_APPROVED             // Company notified: approved by agent
-  COMPANY_REJECTED             // Company notified: rejected by agent
+  COMPANY_REGISTRATION // Agent notified: new company pending approval
+  COMPANY_APPROVED // Company notified: approved by agent
+  COMPANY_REJECTED // Company notified: rejected by agent
   SYSTEM
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+enum AIExecutionPurpose {
+  RESUME_PARSING
+  JOB_PARSING
+  MATCHING
+  RECOMMENDATION
+  ASSISTANT
+}
+
+enum AIExecutionStatus {
+  REQUESTED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  BLOCKED
+}
+
+enum ResumeProcessingStatus {
+  REQUESTED
+  PROCESSING
+  PROPOSED
+  CONFIRMED
+  REJECTED
+  FAILED
+  EXPIRED
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -156,6 +189,7 @@ model User {
   sentMessages  Message[]      @relation("SentMessages")
   notifications Notification[]
   refreshTokens RefreshToken[]
+  aiExecutions  AIExecution[]
 
   @@index([email])
   @@index([role])
@@ -176,14 +210,14 @@ model Candidate {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // 基本情報
-  firstName     String  @db.VarChar(100)
-  lastName      String  @db.VarChar(100)
-  firstNameKana String? @db.VarChar(100)
-  lastNameKana  String? @db.VarChar(100)
+  firstName     String    @db.VarChar(100)
+  lastName      String    @db.VarChar(100)
+  firstNameKana String?   @db.VarChar(100)
+  lastNameKana  String?   @db.VarChar(100)
   dateOfBirth   DateTime?
-  gender        String? @db.VarChar(20)
-  phone         String? @db.VarChar(20)
-  avatarUrl     String? @db.VarChar(500)
+  gender        String?   @db.VarChar(20)
+  phone         String?   @db.VarChar(20)
+  avatarUrl     String?   @db.VarChar(500)
 
   // Location
   country    String? @db.VarChar(100)
@@ -192,12 +226,12 @@ model Candidate {
   address    String? @db.Text
 
   // Work preferences 希望条件
-  desiredJobTypes  String? @db.Text // JSON array
-  desiredLocations String? @db.Text // JSON array
+  desiredJobTypes  String?   @db.Text // JSON array
+  desiredLocations String?   @db.Text // JSON array
   desiredSalaryMin Int?
   desiredSalaryMax Int?
   availableFrom    DateTime?
-  isOpenToWork     Boolean @default(true)
+  isOpenToWork     Boolean   @default(true)
 
   // Language
   japaneseLevel  JapaneseLevel @default(NONE)
@@ -222,7 +256,8 @@ model Candidate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  resume Resume?
+  resume               Resume?
+  resumeProcessingRuns ResumeProcessingRun[]
 
   @@index([userCode])
   @@map("candidates")
@@ -249,6 +284,7 @@ model Resume {
   experiences    Experience[]
   skills         Skill[]
   qualifications Qualification[]
+  processingRuns ResumeProcessingRun[]
 
   @@map("resumes")
 }
@@ -362,11 +398,11 @@ model Company {
   address    String? @db.Text
 
   // Registration / approval
-  registrationNote  String? @db.Text    // Company's note when registering
-  businessRegNumber String? @db.VarChar(100) // 法人番号 (Japan) / registration number
-  rejectionReason   String? @db.Text    // Set by agent when rejecting
+  registrationNote  String?   @db.Text // Company's note when registering
+  businessRegNumber String?   @db.VarChar(100) // 法人番号 (Japan) / registration number
+  rejectionReason   String?   @db.Text // Set by agent when rejecting
   approvedAt        DateTime?
-  approvedByAgentId Int?                // Agent.id who approved
+  approvedByAgentId Int? // Agent.id who approved
 
   isActive Boolean @default(true)
 
@@ -523,9 +559,9 @@ model Application {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  status          ApplicationStatus @default(PENDING)
-  coverLetter     String?           @db.Text
-  resumeSnapshot  String?           @db.LongText // JSON snapshot at apply time
+  status         ApplicationStatus @default(PENDING)
+  coverLetter    String?           @db.Text
+  resumeSnapshot String?           @db.LongText // JSON snapshot at apply time
 
   agentNote       String? @db.Text
   rejectionReason String? @db.Text
@@ -551,7 +587,7 @@ model ApplicationStatusHistory {
 
   fromStatus ApplicationStatus?
   toStatus   ApplicationStatus
-  note       String?           @db.Text
+  note       String?            @db.Text
   changedBy  Int?
 
   createdAt DateTime @default(now())
@@ -571,9 +607,9 @@ model Conversation {
   application   Application? @relation(fields: [applicationId], references: [id])
 
   agentId     Int?
-  agent       Agent?  @relation(fields: [agentId], references: [id])
-  candidateId Int?    // userId of candidate
-  companyId   Int?    // Company.id
+  agent       Agent? @relation(fields: [agentId], references: [id])
+  candidateId Int? // userId of candidate
+  companyId   Int? // Company.id
 
   agentEnabled Boolean @default(false)
 
@@ -648,4 +684,106 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────
+// RELIABLE INTEGRATION
+// ─────────────────────────────────────────────────────────────
+
+model OutboxEvent {
+  id            String            @id @default(uuid()) @db.VarChar(36)
+  aggregateType String            @db.VarChar(100)
+  aggregateId   String            @db.VarChar(64)
+  eventType     String            @db.VarChar(150)
+  payload       Json
+  schemaVersion Int               @default(1)
+  status        OutboxEventStatus @default(PENDING)
+  attempts      Int               @default(0)
+  availableAt   DateTime          @default(now())
+  occurredAt    DateTime          @default(now())
+  publishedAt   DateTime?
+  lastError     String?           @db.Text
+  lockedAt      DateTime?
+  lockedBy      String?           @db.VarChar(100)
+
+  @@index([status, availableAt])
+  @@index([status, lockedAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+model ProcessedMessage {
+  consumerName String   @db.VarChar(100)
+  messageId    String   @db.VarChar(100)
+  processedAt  DateTime @default(now())
+
+  @@id([consumerName, messageId])
+  @@map("processed_messages")
+}
+
+// Stores metadata and metering only. Prompts and model content are not persisted here.
+model AIExecution {
+  id             String             @id @default(uuid()) @db.VarChar(36)
+  purpose        AIExecutionPurpose
+  status         AIExecutionStatus  @default(REQUESTED)
+  idempotencyKey String             @unique @db.VarChar(100)
+
+  actorUserId Int?
+  actor       User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  provider       String  @db.VarChar(100)
+  model          String  @db.VarChar(150)
+  promptVersion  String  @db.VarChar(100)
+  inputReference String? @db.VarChar(200)
+
+  inputTokens  Int?
+  outputTokens Int?
+  latencyMs    Int?
+  costMicros   BigInt?
+  costCurrency String? @db.VarChar(3)
+  errorCode    String? @db.VarChar(100)
+
+  requestedAt         DateTime             @default(now())
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  resumeProcessingRun ResumeProcessingRun?
+
+  @@index([actorUserId, requestedAt])
+  @@index([purpose, status])
+  @@map("ai_executions")
+}
+
+model ResumeProcessingRun {
+  id             String                 @id @default(uuid()) @db.VarChar(36)
+  candidateId    Int
+  candidate      Candidate              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  resumeId       Int
+  resume         Resume                 @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  status         ResumeProcessingStatus @default(REQUESTED)
+  idempotencyKey String                 @unique @db.VarChar(100)
+
+  documentObjectKey String @db.VarChar(500)
+  documentSha256    String @db.Char(64)
+
+  proposal        Json?
+  proposalVersion Int          @default(1)
+  aiExecutionId   String?      @unique @db.VarChar(36)
+  aiExecution     AIExecution? @relation(fields: [aiExecutionId], references: [id], onDelete: SetNull)
+  errorCode       String?      @db.VarChar(100)
+
+  requestedAt  DateTime  @default(now())
+  processingAt DateTime?
+  proposedAt   DateTime?
+  confirmedAt  DateTime?
+  rejectedAt   DateTime?
+  failedAt     DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([candidateId, status])
+  @@index([status, requestedAt])
+  @@map("resume_processing_runs")
 }

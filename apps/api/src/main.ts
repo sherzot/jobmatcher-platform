@@ -1,19 +1,64 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { randomUUID } from 'node:crypto';
+import type { NextFunction, Request, Response } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  const configuredLevels = (process.env.LOG_LEVELS ?? 'error,warn,log')
+    .split(',')
+    .map((level) => level.trim())
+    .filter((level): level is 'log' | 'error' | 'warn' | 'debug' | 'verbose' =>
+      ['log', 'error', 'warn', 'debug', 'verbose'].includes(level),
+    );
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug'],
+    logger: configuredLevels,
   });
 
   // ── Prefix ──────────────────────────────────────────────────
   app.setGlobalPrefix('api');
 
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+
   // ── Cookie parser ────────────────────────────────────────────
   app.use(cookieParser());
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const incoming = req.header('x-request-id');
+    const requestId =
+      incoming && /^[A-Za-z0-9._:-]{1,128}$/.test(incoming)
+        ? incoming
+        : randomUUID();
+    res.setHeader('X-Request-ID', requestId);
+    next();
+  });
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path === '/api/health') return next();
+    const startedAt = Date.now();
+    res.on('finish', () => {
+      const requestId = String(res.getHeader('X-Request-ID') ?? 'unknown');
+      logger.log(
+        JSON.stringify({
+          event: 'http.request',
+          requestId,
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          durationMs: Date.now() - startedAt,
+        }),
+      );
+    });
+    next();
+  });
 
   // ── CORS ─────────────────────────────────────────────────────
   app.enableCors({
@@ -26,9 +71,9 @@ async function bootstrap() {
   // ── Global validation pipe ───────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,        // strip unknown properties
+      whitelist: true, // strip unknown properties
       forbidNonWhitelisted: true,
-      transform: true,        // auto-transform types (e.g. string → number)
+      transform: true, // auto-transform types (e.g. string → number)
       transformOptions: { enableImplicitConversion: true },
     }),
   );
@@ -48,10 +93,10 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
-  console.log(`🚀 API running on http://localhost:${port}/api`);
+  logger.log(`🚀 API running on http://localhost:${port}/api`);
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+    logger.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
   }
 }
 
-bootstrap();
+void bootstrap();

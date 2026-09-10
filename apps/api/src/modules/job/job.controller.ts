@@ -8,13 +8,15 @@ import {
   Patch,
   Post,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { UpdateJobDto } from './dto/update-job.dto';
 import { SearchJobsDto } from './dto/search-jobs.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -23,6 +25,7 @@ import type { JwtPayload } from '../auth/types/jwt-payload.type';
 
 class ReviewJobDto {
   @ApiPropertyOptional({ enum: ['approve', 'reject'] })
+  @IsIn(['approve', 'reject'])
   action: 'approve' | 'reject';
 
   @ApiPropertyOptional()
@@ -64,6 +67,26 @@ export class JobController {
     return this.jobService.createJob(user, dto);
   }
 
+  @Patch(':code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.COMPANY, UserRole.AGENT)
+  @ApiOperation({ summary: '求人を編集する' })
+  updateJob(
+    @CurrentUser() user: JwtPayload,
+    @Param('code') code: string,
+    @Body() dto: UpdateJobDto,
+  ) {
+    return this.jobService.updateJob(user, code, dto);
+  }
+
+  @Delete(':code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.COMPANY, UserRole.AGENT)
+  @ApiOperation({ summary: '求人を削除する（論理削除）' })
+  deleteJob(@CurrentUser() user: JwtPayload, @Param('code') code: string) {
+    return this.jobService.deleteJob(user, code);
+  }
+
   // ── PATCH /api/job/:code/activate (COMPANY or AGENT) ──────
 
   @Patch(':code/activate')
@@ -96,6 +119,11 @@ export class JobController {
     @Param('code') code: string,
     @Body() body: ReviewJobDto,
   ) {
-    return this.jobService.reviewJob(user.sub, code, body.action, body.rejectionReason);
+    return this.jobService.reviewJob(
+      user.sub,
+      code,
+      body.action,
+      body.rejectionReason,
+    );
   }
 }

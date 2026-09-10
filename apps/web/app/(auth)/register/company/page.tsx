@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 const INDUSTRIES = [
   'IT・ソフトウェア',
@@ -56,7 +55,6 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 export default function CompanyRegisterPage() {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
