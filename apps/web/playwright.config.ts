@@ -15,7 +15,7 @@ export default defineConfig({
   webServer: process.env.CI
     ? {
         command:
-          "(npm run start:prod -w apps/api > /tmp/jobmatcher-api.log 2>&1 &) && npm run start -w apps/web -- -p 3010",
+          "cd ../.. && (npm run start:prod -w apps/api > /tmp/jobmatcher-api.log 2>&1 &) && npm run start -w apps/web -- -p 3010",
         url: "http://localhost:3010",
         timeout: 120_000,
         reuseExistingServer: false,

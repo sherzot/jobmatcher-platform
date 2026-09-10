@@ -94,6 +94,10 @@ Qoidalar:
 
 - Tuzatishni commit/push qilish va CI E2E bosqichini qayta tekshirish.
 
+### Correction
+
+- Remote run `34456243406` `apps/web` cwd’da `-w apps/web` root workspace’ni topa olmaganini ko‘rsatdi; CI command’iga `cd ../..` qayta qo‘shildi.
+
 ## 2026-09-10 — API quality gate yakuniy tekshiruvi
 
 ### Verification
